@@ -5,9 +5,9 @@
  * 認証ガードを追加
  */
 
+import { setupLayouts } from 'virtual:generated-layouts'
 // Composables
 import { createRouter, createWebHistory } from 'vue-router'
-import { setupLayouts } from 'virtual:generated-layouts'
 import { routes } from 'vue-router/auto-routes'
 
 const router = createRouter({

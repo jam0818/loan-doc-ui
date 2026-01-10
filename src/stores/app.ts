@@ -1,10 +1,10 @@
+import type { FieldItemModel, PromptMode, ViewMode } from '@/types'
 /**
  * アプリ状態管理ストア
  * 選択状態、モード、生成結果を管理
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { PromptMode, ViewMode, FieldItemModel } from '@/types'
 
 export const useAppStore = defineStore('app', () => {
   /** 選択中の文書ID (UUID) */
@@ -32,68 +32,68 @@ export const useAppStore = defineStore('app', () => {
   const fieldContents = ref<Record<string, string>>({})
 
   /** 文書を選択 */
-  function selectDocument(id: string | null) {
+  function selectDocument (id: string | null) {
     selectedDocumentId.value = id
     selectedPromptId.value = null // プロンプト選択をリセット
   }
 
   /** プロンプトを選択 */
-  function selectPrompt(id: string | null) {
+  function selectPrompt (id: string | null) {
     selectedPromptId.value = id
   }
 
   /** プロンプトモードを切り替え */
-  function setPromptMode(mode: PromptMode) {
+  function setPromptMode (mode: PromptMode) {
     promptMode.value = mode
   }
 
   /** 表示モードを切り替え */
-  function setViewMode(mode: ViewMode) {
+  function setViewMode (mode: ViewMode) {
     viewMode.value = mode
   }
 
   /** 生成中のフィールドを設定 */
-  function setGeneratingFieldId(fieldId: string | null) {
+  function setGeneratingFieldId (fieldId: string | null) {
     generatingFieldId.value = fieldId
   }
 
   /** 生成コンテンツを設定 */
-  function setGeneratedContent(content: string) {
+  function setGeneratedContent (content: string) {
     generatedContent.value = content
   }
 
   /** 生成コンテンツに追記 */
-  function appendGeneratedContent(content: string) {
+  function appendGeneratedContent (content: string) {
     generatedContent.value += content
   }
 
   /** 生成前コンテンツを設定 */
-  function setBeforeContent(content: string) {
+  function setBeforeContent (content: string) {
     beforeContent.value = content
   }
 
   /** フィールドごとの生成コンテンツを設定 */
-  function setFieldContent(fieldId: string, content: string) {
+  function setFieldContent (fieldId: string, content: string) {
     fieldContents.value[fieldId] = content
   }
 
   /** フィールドごとの生成コンテンツを取得 */
-  function getFieldContent(fieldId: string): string {
+  function getFieldContent (fieldId: string): string {
     return fieldContents.value[fieldId] || ''
   }
 
   /** フィールドコンテンツをクリア */
-  function clearFieldContents() {
+  function clearFieldContents () {
     fieldContents.value = {}
   }
 
   /** 全フィールドの生成コンテンツをまとめてMarkdown形式で取得 */
-  function buildGeneratedContentFromFields(fields: FieldItemModel[]): string {
+  function buildGeneratedContentFromFields (fields: FieldItemModel[]): string {
     return fields.map(f => `## ${f.name}\n\n${fieldContents.value[f.field_id] || ''}\n`).join('\n')
   }
 
   /** リセット */
-  function reset() {
+  function reset () {
     selectedDocumentId.value = null
     selectedPromptId.value = null
     promptMode.value = 'generate'

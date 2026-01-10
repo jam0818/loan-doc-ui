@@ -6,11 +6,11 @@
       <v-spacer />
       <v-btn
         color="primary"
-        variant="tonal"
-        size="small"
-        prepend-icon="mdi-creation"
-        :loading="isGenerating"
         :disabled="!canGenerate"
+        :loading="isGenerating"
+        prepend-icon="mdi-creation"
+        size="small"
+        variant="tonal"
         @click="handleGenerate"
       >
         一括生成
@@ -21,16 +21,16 @@
     <div class="toggle-area">
       <v-btn-toggle
         v-model="viewMode"
-        mandatory
-        density="compact"
         color="primary"
+        density="compact"
+        mandatory
       >
-        <v-btn value="before" size="small">
-          <v-icon icon="mdi-file-document-outline" class="mr-1" />
+        <v-btn size="small" value="before">
+          <v-icon class="mr-1" icon="mdi-file-document-outline" />
           生成前
         </v-btn>
-        <v-btn value="after" size="small">
-          <v-icon icon="mdi-file-document-check" class="mr-1" />
+        <v-btn size="small" value="after">
+          <v-icon class="mr-1" icon="mdi-file-document-check" />
           生成後
         </v-btn>
       </v-btn-toggle>
@@ -40,17 +40,17 @@
     <div class="editor-area">
       <v-textarea
         v-model="editorContent"
-        variant="outlined"
+        class="markdown-editor"
         hide-details
         :placeholder="viewMode === 'before' ? '生成前の文書内容' : '生成結果がここに表示されます'"
         :readonly="viewMode === 'before'"
-        class="markdown-editor"
         rows="20"
+        variant="outlined"
       />
 
       <!-- 生成中インジケーター -->
       <div v-if="isGenerating" class="generating-indicator">
-        <v-progress-circular indeterminate size="20" width="2" color="primary" />
+        <v-progress-circular color="primary" indeterminate size="20" width="2" />
         <span class="ml-2">
           {{ appStore.generatingFieldId ? `${appStore.generatingFieldId.slice(-6)} を生成中...` : '生成中...' }}
         </span>
@@ -60,100 +60,100 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useAppStore } from '@/stores/app'
-import { useDocumentStore } from '@/stores/documents'
-import { usePromptStore } from '@/stores/prompts'
-import type { ViewMode } from '@/types'
+  import type { ViewMode } from '@/types'
+  import { computed, ref, watch } from 'vue'
+  import { useAppStore } from '@/stores/app'
+  import { useDocumentStore } from '@/stores/documents'
+  import { usePromptStore } from '@/stores/prompts'
 
-const appStore = useAppStore()
-const docStore = useDocumentStore()
-const promptStore = usePromptStore()
+  const appStore = useAppStore()
+  const docStore = useDocumentStore()
+  const promptStore = usePromptStore()
 
-// 表示モード
-const viewMode = ref<ViewMode>('before')
+  // 表示モード
+  const viewMode = ref<ViewMode>('before')
 
-// 生成中フラグ
-const isGenerating = computed(() => appStore.generatingFieldId !== null)
+  // 生成中フラグ
+  const isGenerating = computed(() => appStore.generatingFieldId !== null)
 
-// 生成可能かどうか
-const canGenerate = computed(() => {
-  return appStore.selectedDocumentId && appStore.selectedPromptId && !isGenerating.value
-})
+  // 生成可能かどうか
+  const canGenerate = computed(() => {
+    return appStore.selectedDocumentId && appStore.selectedPromptId && !isGenerating.value
+  })
 
-// エディタの内容
-const editorContent = computed({
-  get() {
-    return viewMode.value === 'before'
-      ? appStore.beforeContent
-      : appStore.generatedContent
-  },
-  set(value: string) {
-    if (viewMode.value === 'after') {
-      appStore.setGeneratedContent(value)
+  // エディタの内容
+  const editorContent = computed({
+    get () {
+      return viewMode.value === 'before'
+        ? appStore.beforeContent
+        : appStore.generatedContent
+    },
+    set (value: string) {
+      if (viewMode.value === 'after') {
+        appStore.setGeneratedContent(value)
+      }
+    },
+  })
+
+  // 表示モード変更をストアに反映
+  watch(viewMode, mode => {
+    appStore.setViewMode(mode)
+  })
+
+  /**
+   * 一括生成処理（モック実装）
+   * 実際の実装ではイベントストリームで生成
+   */
+  async function handleGenerate () {
+    if (!appStore.selectedDocumentId || !appStore.selectedPromptId) return
+
+    const doc = docStore.getById(appStore.selectedDocumentId)
+    const prompt = promptStore.getById(appStore.selectedPromptId)
+    if (!doc || !prompt) return
+
+    // 生成コンテンツをリセット
+    appStore.setGeneratedContent('')
+
+    // 生成開始時に「生成後」タブに切り替え
+    viewMode.value = 'after'
+
+    // 各フィールドを順次生成（モック）
+    for (const field of doc.field_items || []) {
+      appStore.setGeneratingFieldId(field.field_id)
+
+      // ストリーム風にテキストを追加
+      const header = `## ${field.name}\n\n`
+      appStore.appendGeneratedContent(header)
+
+      // モック生成（実際はAPIからストリーム）
+      let promptText = ''
+      if (prompt.prompt_target === 'all') {
+        const fp = prompt.field_prompt_items?.find(f => f.field_id === null)
+        promptText = fp ? (appStore.promptMode === 'generate' ? fp.generation_prompt : fp.correction_prompt) : ''
+      } else {
+        const fp = prompt.field_prompt_items?.find(f => f.field_id === field.field_id)
+        promptText = fp ? (appStore.promptMode === 'generate' ? fp.generation_prompt : fp.correction_prompt) : ''
+      }
+
+      const mockContent = `【${field.name}の生成結果】\nプロンプト: ${promptText || '(未設定)'}\n元の内容: ${field.content || '(なし)'}\n\n`
+
+      // 文字を1つずつ追加してストリーム風に表示
+      for (const char of mockContent) {
+        await new Promise(resolve => setTimeout(resolve, 20))
+        appStore.appendGeneratedContent(char)
+      }
+
+      appStore.appendGeneratedContent('\n')
     }
+
+    appStore.setGeneratingFieldId(null)
+
+    // 生成後表示に切り替え
+    viewMode.value = 'after'
+
+    // 修正用プロンプトモードに自動切り替え
+    appStore.setPromptMode('revise')
   }
-})
-
-// 表示モード変更をストアに反映
-watch(viewMode, (mode) => {
-  appStore.setViewMode(mode)
-})
-
-/**
- * 一括生成処理（モック実装）
- * 実際の実装ではイベントストリームで生成
- */
-async function handleGenerate() {
-  if (!appStore.selectedDocumentId || !appStore.selectedPromptId) return
-
-  const doc = docStore.getById(appStore.selectedDocumentId)
-  const prompt = promptStore.getById(appStore.selectedPromptId)
-  if (!doc || !prompt) return
-
-  // 生成コンテンツをリセット
-  appStore.setGeneratedContent('')
-
-  // 生成開始時に「生成後」タブに切り替え
-  viewMode.value = 'after'
-
-  // 各フィールドを順次生成（モック）
-  for (const field of doc.field_items || []) {
-    appStore.setGeneratingFieldId(field.field_id)
-
-    // ストリーム風にテキストを追加
-    const header = `## ${field.name}\n\n`
-    appStore.appendGeneratedContent(header)
-
-    // モック生成（実際はAPIからストリーム）
-    let promptText = ''
-    if (prompt.prompt_target === 'all') {
-      const fp = prompt.field_prompt_items?.find(f => f.field_id === null)
-      promptText = fp ? (appStore.promptMode === 'generate' ? fp.generation_prompt : fp.correction_prompt) : ''
-    } else {
-      const fp = prompt.field_prompt_items?.find(f => f.field_id === field.field_id)
-      promptText = fp ? (appStore.promptMode === 'generate' ? fp.generation_prompt : fp.correction_prompt) : ''
-    }
-
-    const mockContent = `【${field.name}の生成結果】\nプロンプト: ${promptText || '(未設定)'}\n元の内容: ${field.content || '(なし)'}\n\n`
-
-    // 文字を1つずつ追加してストリーム風に表示
-    for (const char of mockContent) {
-      await new Promise(resolve => setTimeout(resolve, 20))
-      appStore.appendGeneratedContent(char)
-    }
-
-    appStore.appendGeneratedContent('\n')
-  }
-
-  appStore.setGeneratingFieldId(null)
-
-  // 生成後表示に切り替え
-  viewMode.value = 'after'
-
-  // 修正用プロンプトモードに自動切り替え
-  appStore.setPromptMode('revise')
-}
 </script>
 
 <style scoped>

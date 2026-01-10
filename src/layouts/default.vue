@@ -3,14 +3,14 @@
     <!-- アプリヘッダー -->
     <v-app-bar class="app-header" density="compact" flat>
       <v-app-bar-title>
-        <v-icon icon="mdi-file-document-edit" class="mr-2" />
+        <v-icon class="mr-2" icon="mdi-file-document-edit" />
         文書生成アプリケーション
       </v-app-bar-title>
 
       <template #append>
         <div class="d-flex align-center">
-          <v-chip size="small" variant="tonal" class="mr-2">
-            <v-icon icon="mdi-account" start size="small" />
+          <v-chip class="mr-2" size="small" variant="tonal">
+            <v-icon icon="mdi-account" size="small" start />
             {{ authStore.username || 'ユーザー' }}
           </v-chip>
           <v-btn
@@ -34,24 +34,24 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import DocumentColumn from '@/components/DocumentColumn.vue'
-import PromptColumn from '@/components/PromptColumn.vue'
-import GenerateColumn from '@/components/GenerateColumn.vue'
+  import { onMounted } from 'vue'
+  import { useRouter } from 'vue-router'
+  import DocumentColumn from '@/components/DocumentColumn.vue'
+  import GenerateColumn from '@/components/GenerateColumn.vue'
+  import PromptColumn from '@/components/PromptColumn.vue'
+  import { useAuthStore } from '@/stores/auth'
 
-const router = useRouter()
-const authStore = useAuthStore()
+  const router = useRouter()
+  const authStore = useAuthStore()
 
-onMounted(() => {
-  authStore.initialize()
-})
+  onMounted(() => {
+    authStore.initialize()
+  })
 
-function handleLogout() {
-  authStore.logout()
-  router.push('/login')
-}
+  function handleLogout () {
+    authStore.logout()
+    router.push('/login')
+  }
 </script>
 
 <style scoped>
