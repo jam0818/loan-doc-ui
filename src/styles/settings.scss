@@ -4,7 +4,11 @@
  * Configures SASS variables and Vuetify overwrites
  */
 
-// https://vuetifyjs.com/features/sass-variables/`
-// @use 'vuetify/settings' with (
-//   $color-pack: false
-// );
+// IBM Plex Sans JP フォントファミリー
+$body-font-family: 'IBM Plex Sans JP', 'Helvetica Neue', Arial, sans-serif;
+
+// Vuetify SASS変数のオーバーライド
+@use 'vuetify/settings' with (
+  $body-font-family: $body-font-family,
+  $heading-font-family: $body-font-family
+);
