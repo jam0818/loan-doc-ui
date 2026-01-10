@@ -28,7 +28,7 @@
         v-model="selectedId"
         :items="docStore.documents"
         item-title="title"
-        item-value="id"
+        item-value="document_id"
         label="文書を選択"
         variant="outlined"
         density="compact"
@@ -42,8 +42,8 @@
       <h3 class="document-title">{{ selectedDocument.title }}</h3>
       <v-list density="compact" class="field-list">
         <v-list-item
-          v-for="field in selectedDocument.fields"
-          :key="field.id"
+          v-for="field in selectedDocument.field_items"
+          :key="field.field_id"
           prepend-icon="mdi-form-textbox"
         >
           <v-list-item-title>{{ field.name }}</v-list-item-title>
@@ -51,7 +51,7 @@
             {{ field.content || '(内容未設定)' }}
           </v-list-item-subtitle>
         </v-list-item>
-        <v-list-item v-if="!selectedDocument.fields.length">
+        <v-list-item v-if="!selectedDocument.field_items?.length">
           <v-list-item-title class="text-medium-emphasis">
             フィールドがありません
           </v-list-item-title>
@@ -125,7 +125,7 @@
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="showCreateDialog = false">キャンセル</v-btn>
-          <v-btn color="primary" variant="flat" @click="handleCreate">作成</v-btn>
+          <v-btn color="primary" variant="flat" :loading="docStore.loading" @click="handleCreate">作成</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -151,7 +151,7 @@
           </div>
           <v-card
             v-for="(field, index) in editFields"
-            :key="field.id"
+            :key="field.field_id"
             variant="outlined"
             class="mb-3 pa-3"
           >
@@ -186,7 +186,7 @@
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="showEditDialog = false">キャンセル</v-btn>
-          <v-btn color="primary" variant="flat" @click="handleUpdate">保存</v-btn>
+          <v-btn color="primary" variant="flat" :loading="docStore.loading" @click="handleUpdate">保存</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -194,10 +194,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useDocumentStore } from '@/stores/documents'
 import { useAppStore } from '@/stores/app'
-import type { Field } from '@/types'
+import type { FieldItemModel, FieldItemUpdate } from '@/types'
 
 const docStore = useDocumentStore()
 const appStore = useAppStore()
@@ -215,12 +215,21 @@ const newFields = ref<{ name: string; content: string }[]>([{ name: '', content:
 
 // 編集用
 const editDocTitle = ref('')
-const editFields = ref<Field[]>([])
+const editFields = ref<FieldItemUpdate[]>([])
 
 // 選択中の文書
 const selectedDocument = computed(() => {
   if (!selectedId.value) return null
   return docStore.getById(selectedId.value)
+})
+
+// 初期化時に文書一覧を取得
+onMounted(async () => {
+  try {
+    await docStore.fetchList()
+  } catch (e) {
+    console.error('文書一覧の取得に失敗:', e)
+  }
 })
 
 // 選択変更時にストアに反映
@@ -229,8 +238,8 @@ watch(selectedId, (id) => {
   // 生成前コンテンツを更新
   if (id) {
     const doc = docStore.getById(id)
-    if (doc) {
-      const content = doc.fields.map(f => `## ${f.name}\n\n${f.content || ''}\n`).join('\n')
+    if (doc && doc.field_items) {
+      const content = doc.field_items.map(f => `## ${f.name}\n\n${f.content || ''}\n`).join('\n')
       appStore.setBeforeContent(content)
     }
   }
@@ -244,7 +253,7 @@ function addNewField() {
 // フィールド追加（編集）
 function addEditField() {
   editFields.value.push({
-    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    field_id: null, // 新規フィールド
     name: '',
     content: '',
   })
@@ -254,40 +263,53 @@ function addEditField() {
 function openEditDialog() {
   if (!selectedDocument.value) return
   editDocTitle.value = selectedDocument.value.title
-  editFields.value = selectedDocument.value.fields.map(f => ({ ...f }))
+  editFields.value = (selectedDocument.value.field_items || []).map(f => ({
+    field_id: f.field_id,
+    name: f.name,
+    content: f.content,
+  }))
   showEditDialog.value = true
 }
 
 // 作成処理
-function handleCreate() {
+async function handleCreate() {
   if (!newDocTitle.value.trim()) return
-  const fields = newFields.value
-    .filter(f => f.name.trim() && f.content.trim())
-    .map(f => ({
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name: f.name.trim(),
-      content: f.content.trim(),
-    }))
-  const doc = docStore.create(newDocTitle.value.trim(), fields)
-  selectedId.value = doc.id
-  showCreateDialog.value = false
-  newDocTitle.value = ''
-  newFields.value = [{ name: '', content: '' }]
+  const fields = newFields.value.filter(f => f.name.trim() && f.content.trim())
+  try {
+    const doc = await docStore.create(newDocTitle.value.trim(), fields)
+    selectedId.value = doc.document_id
+    showCreateDialog.value = false
+    newDocTitle.value = ''
+    newFields.value = [{ name: '', content: '' }]
+  } catch (e) {
+    console.error('文書の作成に失敗:', e)
+  }
 }
 
 // 更新処理
-function handleUpdate() {
+async function handleUpdate() {
   if (!selectedId.value || !editDocTitle.value.trim()) return
   const fields = editFields.value.filter(f => f.name.trim() && f.content.trim())
-  docStore.update(selectedId.value, { title: editDocTitle.value.trim(), fields })
-  showEditDialog.value = false
+  try {
+    await docStore.update(selectedId.value, {
+      title: editDocTitle.value.trim(),
+      fieldItems: fields,
+    })
+    showEditDialog.value = false
+  } catch (e) {
+    console.error('文書の更新に失敗:', e)
+  }
 }
 
 // 削除処理
-function handleDelete() {
+async function handleDelete() {
   if (!selectedId.value) return
-  docStore.remove(selectedId.value)
-  selectedId.value = null
+  try {
+    await docStore.remove(selectedId.value)
+    selectedId.value = null
+  } catch (e) {
+    console.error('文書の削除に失敗:', e)
+  }
 }
 </script>
 

@@ -52,7 +52,7 @@
       <div v-if="isGenerating" class="generating-indicator">
         <v-progress-circular indeterminate size="20" width="2" color="primary" />
         <span class="ml-2">
-          {{ appStore.generatingFieldId ? `${appStore.generatingFieldId} を生成中...` : '生成中...' }}
+          {{ appStore.generatingFieldId ? `${appStore.generatingFieldId.slice(-6)} を生成中...` : '生成中...' }}
         </span>
       </div>
     </div>
@@ -113,13 +113,13 @@ async function handleGenerate() {
 
   // 生成コンテンツをリセット
   appStore.setGeneratedContent('')
-  
+
   // 生成開始時に「生成後」タブに切り替え
   viewMode.value = 'after'
 
   // 各フィールドを順次生成（モック）
-  for (const field of doc.fields) {
-    appStore.setGeneratingFieldId(field.id)
+  for (const field of doc.field_items || []) {
+    appStore.setGeneratingFieldId(field.field_id)
 
     // ストリーム風にテキストを追加
     const header = `## ${field.name}\n\n`
@@ -127,11 +127,12 @@ async function handleGenerate() {
 
     // モック生成（実際はAPIからストリーム）
     let promptText = ''
-    if (prompt.type === 'global') {
-      promptText = appStore.promptMode === 'generate' ? prompt.globalPrompt : prompt.globalRevisePrompt
+    if (prompt.prompt_target === 'all') {
+      const fp = prompt.field_prompt_items?.find(f => f.field_id === null)
+      promptText = fp ? (appStore.promptMode === 'generate' ? fp.generation_prompt : fp.correction_prompt) : ''
     } else {
-      const fp = prompt.fieldPrompts.find(f => f.fieldId === field.id)
-      promptText = fp ? (appStore.promptMode === 'generate' ? fp.generatePrompt : fp.revisePrompt) : ''
+      const fp = prompt.field_prompt_items?.find(f => f.field_id === field.field_id)
+      promptText = fp ? (appStore.promptMode === 'generate' ? fp.generation_prompt : fp.correction_prompt) : ''
     }
 
     const mockContent = `【${field.name}の生成結果】\nプロンプト: ${promptText || '(未設定)'}\n元の内容: ${field.content || '(なし)'}\n\n`
@@ -149,7 +150,7 @@ async function handleGenerate() {
 
   // 生成後表示に切り替え
   viewMode.value = 'after'
-  
+
   // 修正用プロンプトモードに自動切り替え
   appStore.setPromptMode('revise')
 }

@@ -3,14 +3,14 @@
  * 選択状態、モード、生成結果を管理
  */
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { PromptMode, ViewMode } from '@/types'
+import { ref } from 'vue'
+import type { PromptMode, ViewMode, FieldItemModel } from '@/types'
 
 export const useAppStore = defineStore('app', () => {
-  /** 選択中の文書ID */
+  /** 選択中の文書ID (UUID) */
   const selectedDocumentId = ref<string | null>(null)
 
-  /** 選択中のプロンプトID */
+  /** 選択中のプロンプトID (UUID) */
   const selectedPromptId = ref<string | null>(null)
 
   /** プロンプトモード（生成用/修正用） */
@@ -19,7 +19,7 @@ export const useAppStore = defineStore('app', () => {
   /** 表示モード（生成前/生成後） */
   const viewMode = ref<ViewMode>('before')
 
-  /** 生成中のフィールドID */
+  /** 生成中のフィールドID (UUID) */
   const generatingFieldId = ref<string | null>(null)
 
   /** 生成されたコンテンツ（Markdown） */
@@ -88,8 +88,8 @@ export const useAppStore = defineStore('app', () => {
   }
 
   /** 全フィールドの生成コンテンツをまとめてMarkdown形式で取得 */
-  function buildGeneratedContentFromFields(fields: { id: string; name: string }[]): string {
-    return fields.map(f => `## ${f.name}\n\n${fieldContents.value[f.id] || ''}\n`).join('\n')
+  function buildGeneratedContentFromFields(fields: FieldItemModel[]): string {
+    return fields.map(f => `## ${f.name}\n\n${fieldContents.value[f.field_id] || ''}\n`).join('\n')
   }
 
   /** リセット */

@@ -1,146 +1,196 @@
 /**
  * 文書管理ストア
- * 文書のCRUDとローカルストレージ永続化を提供
+ * APIクライアントを使用してバックエンドと連携
  */
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
-import type { Document, Field } from '@/types'
-
-/** ローカルストレージのキー */
-const STORAGE_KEY = 'loan-doc-ui:documents'
-
-/** ユニークIDを生成 */
-function generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-}
-
-/** ローカルストレージから文書を読み込む */
-function loadFromStorage(): Document[] {
-    try {
-        const stored = localStorage.getItem(STORAGE_KEY)
-        if (stored) {
-            const docs = JSON.parse(stored)
-            return docs.map((doc: Document) => ({
-                ...doc,
-                fields: doc.fields.map((f: Field) => ({
-                    ...f,
-                    content: f.content || '', // 後方互換性
-                })),
-                createdAt: new Date(doc.createdAt),
-                updatedAt: new Date(doc.updatedAt),
-            }))
-        }
-    } catch (e) {
-        console.error('文書の読み込みに失敗:', e)
-    }
-    return []
-}
-
-/** ローカルストレージに文書を保存 */
-function saveToStorage(documents: Document[]): void {
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(documents))
-    } catch (e) {
-        console.error('文書の保存に失敗:', e)
-    }
-}
+import { ref, computed } from 'vue'
+import { documentsApi } from '@/api'
+import type {
+    DocumentModel,
+    DocumentCreate,
+    DocumentUpdate,
+    FieldItemModel,
+    FieldItemUpdate,
+} from '@/types'
 
 export const useDocumentStore = defineStore('documents', () => {
     /** 文書一覧 */
-    const documents = ref<Document[]>(loadFromStorage())
+    const documents = ref<DocumentModel[]>([])
 
-    // 変更を自動保存
-    watch(
-        documents,
-        (newDocs) => {
-            saveToStorage(newDocs)
-        },
-        { deep: true }
-    )
+    /** ローディング状態 */
+    const loading = ref(false)
+
+    /** エラー状態 */
+    const error = ref<string | null>(null)
 
     /** 文書をIDで取得 */
-    function getById(id: string): Document | undefined {
-        return documents.value.find((doc) => doc.id === id)
+    function getById(id: string): DocumentModel | undefined {
+        return documents.value.find((doc) => doc.document_id === id)
+    }
+
+    /** 文書一覧をAPIから取得 */
+    async function fetchList(): Promise<void> {
+        loading.value = true
+        error.value = null
+        try {
+            documents.value = await documentsApi.fetchDocuments()
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : '文書の取得に失敗しました'
+            throw e
+        } finally {
+            loading.value = false
+        }
     }
 
     /** 新規文書を作成 */
-    function create(title: string, fields: Field[] = []): Document {
-        const now = new Date()
-        const newDoc: Document = {
-            id: generateId(),
-            title,
-            fields,
-            createdAt: now,
-            updatedAt: now,
+    async function create(
+        title: string,
+        fieldItems: { name: string; content: string }[] = [],
+        sharedScope: 'all' | 'only_me' = 'only_me'
+    ): Promise<DocumentModel> {
+        loading.value = true
+        error.value = null
+        try {
+            const payload: DocumentCreate = {
+                title,
+                shared_scope: sharedScope,
+                field_items: fieldItems,
+            }
+            const response = await documentsApi.createDocument(payload)
+            documents.value.push(response.new_document)
+            return response.new_document
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : '文書の作成に失敗しました'
+            throw e
+        } finally {
+            loading.value = false
         }
-        documents.value.push(newDoc)
-        return newDoc
     }
 
     /** 文書を更新 */
-    function update(id: string, updates: Partial<Omit<Document, 'id' | 'createdAt'>>): void {
-        const index = documents.value.findIndex((doc) => doc.id === id)
-        if (index !== -1) {
-            documents.value[index] = {
-                ...documents.value[index],
-                ...updates,
-                updatedAt: new Date(),
+    async function update(
+        id: string,
+        updates: {
+            title?: string
+            sharedScope?: 'all' | 'only_me'
+            fieldItems?: FieldItemUpdate[]
+        }
+    ): Promise<void> {
+        loading.value = true
+        error.value = null
+        try {
+            const doc = getById(id)
+            if (!doc) throw new Error('文書が見つかりません')
+
+            const payload: DocumentUpdate = {
+                title: updates.title ?? doc.title,
+                shared_scope: updates.sharedScope ?? doc.shared_scope,
+                field_items: updates.fieldItems ?? (doc.field_items || []).map((f) => ({
+                    field_id: f.field_id,
+                    name: f.name,
+                    content: f.content,
+                })),
             }
+
+            await documentsApi.updateDocument(id, payload)
+
+            // ローカル状態を更新
+            const index = documents.value.findIndex((d) => d.document_id === id)
+            const docToUpdate = documents.value[index]
+            if (docToUpdate) {
+                docToUpdate.title = payload.title
+                docToUpdate.shared_scope = payload.shared_scope
+                docToUpdate.field_items = payload.field_items.map((f, i) => ({
+                    field_id: f.field_id || `temp-${i}`,
+                    name: f.name,
+                    content: f.content,
+                }))
+            }
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : '文書の更新に失敗しました'
+            throw e
+        } finally {
+            loading.value = false
         }
     }
 
     /** 文書を削除 */
-    function remove(id: string): void {
-        const index = documents.value.findIndex((doc) => doc.id === id)
-        if (index !== -1) {
-            documents.value.splice(index, 1)
+    async function remove(id: string): Promise<void> {
+        loading.value = true
+        error.value = null
+        try {
+            await documentsApi.deleteDocument(id)
+            const index = documents.value.findIndex((d) => d.document_id === id)
+            if (index !== -1) {
+                documents.value.splice(index, 1)
+            }
+        } catch (e) {
+            error.value = e instanceof Error ? e.message : '文書の削除に失敗しました'
+            throw e
+        } finally {
+            loading.value = false
         }
     }
 
-    /** フィールドを追加 */
-    function addField(documentId: string, name: string, content: string = ''): Field | undefined {
-        const doc = documents.value.find((d) => d.id === documentId)
+    /** フィールドを追加（ローカル操作後にupdateを呼ぶ想定） */
+    function addFieldLocal(
+        documentId: string,
+        name: string,
+        content: string = ''
+    ): FieldItemModel | undefined {
+        const doc = documents.value.find((d) => d.document_id === documentId)
         if (doc) {
-            const newField: Field = { id: generateId(), name, content }
-            doc.fields.push(newField)
-            doc.updatedAt = new Date()
+            const newField: FieldItemModel = {
+                field_id: `temp-${Date.now()}`,
+                name,
+                content,
+            }
+            if (!doc.field_items) {
+                doc.field_items = []
+            }
+            doc.field_items.push(newField)
             return newField
         }
         return undefined
     }
 
-    /** フィールドを更新 */
-    function updateField(documentId: string, fieldId: string, updates: Partial<Omit<Field, 'id'>>): void {
-        const doc = documents.value.find((d) => d.id === documentId)
-        if (doc) {
-            const field = doc.fields.find((f) => f.id === fieldId)
+    /** フィールドを更新（ローカル操作） */
+    function updateFieldLocal(
+        documentId: string,
+        fieldId: string,
+        updates: Partial<Omit<FieldItemModel, 'field_id'>>
+    ): void {
+        const doc = documents.value.find((d) => d.document_id === documentId)
+        if (doc && doc.field_items) {
+            const field = doc.field_items.find((f) => f.field_id === fieldId)
             if (field) {
                 Object.assign(field, updates)
-                doc.updatedAt = new Date()
             }
         }
     }
 
-    /** フィールドを削除 */
-    function deleteField(documentId: string, fieldId: string): void {
-        const doc = documents.value.find((d) => d.id === documentId)
-        if (doc) {
-            const index = doc.fields.findIndex((f) => f.id === fieldId)
+    /** フィールドを削除（ローカル操作） */
+    function deleteFieldLocal(documentId: string, fieldId: string): void {
+        const doc = documents.value.find((d) => d.document_id === documentId)
+        if (doc && doc.field_items) {
+            const index = doc.field_items.findIndex((f) => f.field_id === fieldId)
             if (index !== -1) {
-                doc.fields.splice(index, 1)
-                doc.updatedAt = new Date()
+                doc.field_items.splice(index, 1)
             }
         }
     }
 
     return {
         documents,
+        loading,
+        error,
         getById,
+        fetchList,
         create,
         update,
         remove,
-        addField,
-        updateField,
-        deleteField,
+        addFieldLocal,
+        updateFieldLocal,
+        deleteFieldLocal,
     }
 })

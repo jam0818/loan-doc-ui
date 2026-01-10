@@ -1,0 +1,1632 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "FastAPI",
+        "version": "0.1.0"
+    },
+    "paths": {
+        "/api/v2/authorization": {
+            "post": {
+                "tags": [
+                    "authorization"
+                ],
+                "summary": "Login",
+                "operationId": "login_api_v2_authorization_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserModel"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AuthorizationApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/documents": {
+            "get": {
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Get Documents List",
+                "operationId": "get_documents_list_api_v2_documents_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetDocumentListApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Create Document",
+                "operationId": "create_document_api_v2_documents_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DocumentCreate"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DocumentCreateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v2/documents/{document_id}": {
+            "put": {
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Update Document",
+                "operationId": "update_document_api_v2_documents__document_id__put",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "document_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Document Id"
+                        },
+                        "example": "10000000-0000-0000-0000-000000000001"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/DocumentUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/DocumentUpdateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "documents"
+                ],
+                "summary": "Delete Document",
+                "operationId": "delete_document_api_v2_documents__document_id__delete",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "document_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Document Id"
+                        },
+                        "example": "10000000-0000-0000-0000-000000000001"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/prompts": {
+            "get": {
+                "tags": [
+                    "prompts"
+                ],
+                "summary": "Get Prompt List",
+                "operationId": "get_prompt_list_api_v2_prompts_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetPromptListApiResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "prompts"
+                ],
+                "summary": "Create Prompt",
+                "operationId": "create_prompt_api_v2_prompts_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PromptCreate"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PromptCreateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v2/prompts/{prompt_id}": {
+            "put": {
+                "tags": [
+                    "prompts"
+                ],
+                "summary": "Update Prompt",
+                "operationId": "update_prompt_api_v2_prompts__prompt_id__put",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "prompt_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Prompt Id"
+                        },
+                        "example": "30000000-0000-0000-0000-000000000001"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PromptUpdate"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PromptUpdateResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "prompts"
+                ],
+                "summary": "Delete Document",
+                "operationId": "delete_document_api_v2_prompts__prompt_id__delete",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "prompt_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Prompt Id"
+                        },
+                        "example": "30000000-0000-0000-0000-000000000001"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PromptDeleteResponse"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ErrorResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/history": {
+            "get": {
+                "tags": [
+                    "history"
+                ],
+                "summary": "Get Session List",
+                "operationId": "get_session_list_api_v2_history_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v2/history/{session_id}": {
+            "get": {
+                "tags": [
+                    "history"
+                ],
+                "summary": "Get History",
+                "operationId": "get_history_api_v2_history__session_id__get",
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "session_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid",
+                            "title": "Session Id"
+                        },
+                        "example": "50000000-0000-0000-0000-000000000001"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v2/llm/generate": {
+            "post": {
+                "tags": [
+                    "llm"
+                ],
+                "summary": "Generate Response",
+                "description": "LLMによる回答生成をストリーミングで行う",
+                "operationId": "generate_response_api_v2_llm_generate_post",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UserInputPromptRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/items/": {
+            "get": {
+                "summary": "Read Tokens",
+                "operationId": "read_tokens_items__get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/api/v2/me": {
+            "get": {
+                "summary": "Read Users Me",
+                "operationId": "read_users_me_api_v2_me_get",
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "application/json": {
+                                "schema": {}
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "OAuth2PasswordBearer": []
+                    }
+                ]
+            }
+        },
+        "/{catchall}": {
+            "get": {
+                "summary": "Catch All",
+                "operationId": "catch_all__catchall__get",
+                "parameters": [
+                    {
+                        "name": "catchall",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "title": "Catchall"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Response",
+                        "content": {
+                            "text/html": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation Error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HTTPValidationError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AuthorizationApiResponse": {
+                "properties": {
+                    "token": {
+                        "type": "string",
+                        "title": "Token"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "token"
+                ],
+                "title": "AuthorizationApiResponse"
+            },
+            "DocumentCreate": {
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "title": "Title",
+                        "description": "ドキュメントのタイトル",
+                        "examples": [
+                            "プロジェクト仕様書"
+                        ]
+                    },
+                    "shared_scope": {
+                        "$ref": "#/components/schemas/SharedScope",
+                        "description": "共有範囲",
+                        "examples": [
+                            "only_me"
+                        ]
+                    },
+                    "field_items": {
+                        "items": {
+                            "$ref": "#/components/schemas/FieldItemCreate"
+                        },
+                        "type": "array",
+                        "title": "Field Items",
+                        "description": "紐付けるフィールドのリスト",
+                        "default": []
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "title",
+                    "shared_scope"
+                ],
+                "title": "DocumentCreate"
+            },
+            "DocumentCreateResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "inserted_document_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Inserted Document Id"
+                    },
+                    "new_document": {
+                        "$ref": "#/components/schemas/DocumentModel"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message",
+                    "inserted_document_id",
+                    "new_document"
+                ],
+                "title": "DocumentCreateResponse"
+            },
+            "DocumentModel": {
+                "properties": {
+                    "document_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Document Id"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "User Id"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "shared_scope": {
+                        "$ref": "#/components/schemas/SharedScope"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    },
+                    "field_items": {
+                        "items": {
+                            "$ref": "#/components/schemas/FieldItemModel"
+                        },
+                        "type": "array",
+                        "title": "Field Items"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "document_id",
+                    "user_id",
+                    "title",
+                    "shared_scope"
+                ],
+                "title": "DocumentModel",
+                "description": "DB表示用 / レスポンス用"
+            },
+            "DocumentUpdate": {
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "title": "Title",
+                        "description": "ドキュメントのタイトル",
+                        "examples": [
+                            "プロジェクト仕様書"
+                        ]
+                    },
+                    "shared_scope": {
+                        "$ref": "#/components/schemas/SharedScope",
+                        "description": "共有範囲",
+                        "examples": [
+                            "only_me"
+                        ]
+                    },
+                    "field_items": {
+                        "items": {
+                            "$ref": "#/components/schemas/FieldItemUpdate"
+                        },
+                        "type": "array",
+                        "title": "Field Items",
+                        "description": "更新・追加するフィールドリスト",
+                        "examples": [
+                            [
+                                {
+                                    "content": "【更新】昨今のDX推進に伴い、AI導入が急務。",
+                                    "field_id": "20000000-0000-0000-0000-000000000001",
+                                    "name": "背景"
+                                },
+                                {
+                                    "content": "レガシーシステムの保守コスト増大",
+                                    "name": "新規課題"
+                                }
+                            ]
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "title",
+                    "shared_scope",
+                    "field_items"
+                ],
+                "title": "DocumentUpdate"
+            },
+            "DocumentUpdateResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "updated_document_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Updated Document Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message",
+                    "updated_document_id"
+                ],
+                "title": "DocumentUpdateResponse"
+            },
+            "ErrorResponse": {
+                "properties": {
+                    "error": {
+                        "type": "string",
+                        "title": "Error"
+                    },
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "details": {
+                        "anyOf": [
+                            {
+                                "additionalProperties": true,
+                                "type": "object"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Details",
+                        "examples": [
+                            {}
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "error",
+                    "message"
+                ],
+                "title": "ErrorResponse"
+            },
+            "FieldItemCreate": {
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "content": {
+                        "type": "string",
+                        "title": "Content"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "content"
+                ],
+                "title": "FieldItemCreate",
+                "description": "作成リクエスト用"
+            },
+            "FieldItemModel": {
+                "properties": {
+                    "field_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Field Id"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "content": {
+                        "type": "string",
+                        "title": "Content"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "field_id",
+                    "name",
+                    "content"
+                ],
+                "title": "FieldItemModel",
+                "description": "DB表示用 / レスポンス用"
+            },
+            "FieldItemUpdate": {
+                "properties": {
+                    "field_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Field Id",
+                        "description": "既存項目の場合はIDを指定"
+                    },
+                    "name": {
+                        "type": "string",
+                        "title": "Name"
+                    },
+                    "content": {
+                        "type": "string",
+                        "title": "Content"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "name",
+                    "content"
+                ],
+                "title": "FieldItemUpdate",
+                "description": "更新リクエスト用"
+            },
+            "FieldPromptCreate": {
+                "properties": {
+                    "field_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Field Id",
+                        "description": "対象のフィールドID ('all'の場合はnull)",
+                        "examples": [
+                            "20000000-0000-0000-0000-000000000001"
+                        ]
+                    },
+                    "generation_prompt": {
+                        "type": "string",
+                        "title": "Generation Prompt",
+                        "description": "生成用プロンプト",
+                        "examples": [
+                            "要約してください"
+                        ]
+                    },
+                    "correction_prompt": {
+                        "type": "string",
+                        "title": "Correction Prompt",
+                        "description": "修正用プロンプト",
+                        "examples": [
+                            "もっと短くして"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "generation_prompt",
+                    "correction_prompt"
+                ],
+                "title": "FieldPromptCreate",
+                "description": "作成リクエスト用 (IDなし)"
+            },
+            "FieldPromptModel": {
+                "properties": {
+                    "field_prompt_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Field Prompt Id"
+                    },
+                    "field_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Field Id"
+                    },
+                    "generation_prompt": {
+                        "type": "string",
+                        "title": "Generation Prompt"
+                    },
+                    "correction_prompt": {
+                        "type": "string",
+                        "title": "Correction Prompt"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "field_prompt_id",
+                    "generation_prompt",
+                    "correction_prompt"
+                ],
+                "title": "FieldPromptModel",
+                "description": "DB表示用 / レスポンス用"
+            },
+            "FieldPromptUpdate": {
+                "properties": {
+                    "field_prompt_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Field Prompt Id",
+                        "description": "既存項目の場合はIDを指定",
+                        "examples": [
+                            "40000000-0000-0000-0000-000000000001"
+                        ]
+                    },
+                    "field_id": {
+                        "anyOf": [
+                            {
+                                "type": "string",
+                                "format": "uuid"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ],
+                        "title": "Field Id",
+                        "description": "対象のフィールドID"
+                    },
+                    "generation_prompt": {
+                        "type": "string",
+                        "title": "Generation Prompt",
+                        "description": "生成用プロンプト"
+                    },
+                    "correction_prompt": {
+                        "type": "string",
+                        "title": "Correction Prompt",
+                        "description": "修正用プロンプト"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "generation_prompt",
+                    "correction_prompt"
+                ],
+                "title": "FieldPromptUpdate",
+                "description": "更新リクエスト用 (IDあり/なし混在)"
+            },
+            "GetDocumentListApiResponse": {
+                "properties": {
+                    "documents": {
+                        "items": {
+                            "$ref": "#/components/schemas/DocumentModel"
+                        },
+                        "type": "array",
+                        "title": "Documents"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "documents"
+                ],
+                "title": "GetDocumentListApiResponse"
+            },
+            "GetPromptListApiResponse": {
+                "properties": {
+                    "prompts": {
+                        "items": {
+                            "$ref": "#/components/schemas/PromptModel"
+                        },
+                        "type": "array",
+                        "title": "Prompts"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompts"
+                ],
+                "title": "GetPromptListApiResponse"
+            },
+            "HTTPValidationError": {
+                "properties": {
+                    "detail": {
+                        "items": {
+                            "$ref": "#/components/schemas/ValidationError"
+                        },
+                        "type": "array",
+                        "title": "Detail"
+                    }
+                },
+                "type": "object",
+                "title": "HTTPValidationError"
+            },
+            "PromptCreate": {
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "title": "Title",
+                        "description": "プロンプト名",
+                        "examples": [
+                            "会議議事録要約セット"
+                        ]
+                    },
+                    "shared_scope": {
+                        "$ref": "#/components/schemas/SharedScope",
+                        "description": "共有範囲",
+                        "examples": [
+                            "only_me"
+                        ]
+                    },
+                    "prompt_target": {
+                        "$ref": "#/components/schemas/PromptTarget",
+                        "description": "対象範囲",
+                        "examples": [
+                            "each"
+                        ]
+                    },
+                    "document_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Document Id",
+                        "description": "紐付けるドキュメントID",
+                        "examples": [
+                            "10000000-0000-0000-0000-000000000001"
+                        ]
+                    },
+                    "field_prompt_items": {
+                        "items": {
+                            "$ref": "#/components/schemas/FieldPromptCreate"
+                        },
+                        "type": "array",
+                        "title": "Field Prompt Items",
+                        "description": "フィールドごとのプロンプト設定リスト",
+                        "default": []
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "title",
+                    "shared_scope",
+                    "prompt_target",
+                    "document_id"
+                ],
+                "title": "PromptCreate",
+                "description": "作成リクエスト"
+            },
+            "PromptCreateResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "inserted_prompt_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Inserted Prompt Id"
+                    },
+                    "new_prompt": {
+                        "$ref": "#/components/schemas/PromptModel"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message",
+                    "inserted_prompt_id",
+                    "new_prompt"
+                ],
+                "title": "PromptCreateResponse"
+            },
+            "PromptDeleteResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "deleted_prompt_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Deleted Prompt Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message",
+                    "deleted_prompt_id"
+                ],
+                "title": "PromptDeleteResponse"
+            },
+            "PromptModel": {
+                "properties": {
+                    "prompt_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Prompt Id"
+                    },
+                    "user_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "User Id"
+                    },
+                    "document_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Document Id"
+                    },
+                    "title": {
+                        "type": "string",
+                        "title": "Title"
+                    },
+                    "shared_scope": {
+                        "$ref": "#/components/schemas/SharedScope"
+                    },
+                    "prompt_target": {
+                        "$ref": "#/components/schemas/PromptTarget"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Created At"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "title": "Updated At"
+                    },
+                    "field_prompt_items": {
+                        "items": {
+                            "$ref": "#/components/schemas/FieldPromptModel"
+                        },
+                        "type": "array",
+                        "title": "Field Prompt Items"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "prompt_id",
+                    "user_id",
+                    "document_id",
+                    "title",
+                    "shared_scope",
+                    "prompt_target"
+                ],
+                "title": "PromptModel",
+                "description": "DB表示用 / レスポンス用"
+            },
+            "PromptTarget": {
+                "type": "string",
+                "enum": [
+                    "all",
+                    "each"
+                ],
+                "title": "PromptTarget"
+            },
+            "PromptUpdate": {
+                "properties": {
+                    "title": {
+                        "type": "string",
+                        "title": "Title",
+                        "description": "プロンプト名",
+                        "examples": [
+                            "会議議事録要約セット"
+                        ]
+                    },
+                    "shared_scope": {
+                        "$ref": "#/components/schemas/SharedScope",
+                        "description": "共有範囲",
+                        "examples": [
+                            "only_me"
+                        ]
+                    },
+                    "prompt_target": {
+                        "$ref": "#/components/schemas/PromptTarget",
+                        "description": "対象範囲",
+                        "examples": [
+                            "each"
+                        ]
+                    },
+                    "field_prompt_items": {
+                        "items": {
+                            "$ref": "#/components/schemas/FieldPromptUpdate"
+                        },
+                        "type": "array",
+                        "title": "Field Prompt Items",
+                        "description": "更新・追加するフィールドプロンプトリスト",
+                        "examples": [
+                            [
+                                {
+                                    "correction_prompt": "300文字以内で",
+                                    "field_id": "20000000-0000-0000-0000-000000000001",
+                                    "field_prompt_id": "40000000-0000-0000-0000-000000000001",
+                                    "generation_prompt": "【更新】要約してください"
+                                },
+                                {
+                                    "correction_prompt": "自然な日本語で",
+                                    "field_id": "20000000-0000-0000-0000-000000000002",
+                                    "generation_prompt": "【新規】翻訳してください"
+                                }
+                            ]
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "title",
+                    "shared_scope",
+                    "prompt_target",
+                    "field_prompt_items"
+                ],
+                "title": "PromptUpdate",
+                "description": "更新リクエスト"
+            },
+            "PromptUpdateResponse": {
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "updated_prompt_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Updated Prompt Id"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "message",
+                    "updated_prompt_id"
+                ],
+                "title": "PromptUpdateResponse"
+            },
+            "SharedScope": {
+                "type": "string",
+                "enum": [
+                    "all",
+                    "only_me"
+                ],
+                "title": "SharedScope"
+            },
+            "UserInputPromptRequest": {
+                "properties": {
+                    "session_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "セッションID",
+                        "examples": [
+                            "50000000-0000-0000-0000-000000000001"
+                        ]
+                    },
+                    "prompt_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "使用するプロンプトのprompt_id",
+                        "examples": [
+                            "30000000-0000-0000-0000-000000000001"
+                        ]
+                    },
+                    "field_name": {
+                        "type": "string",
+                        "title": "プロンプトの対象フィールド名",
+                        "examples": [
+                            "背景"
+                        ]
+                    },
+                    "input_text": {
+                        "type": "string",
+                        "title": "ユーザー入力プロンプト内容",
+                        "examples": [
+                            "もう少しフォーマルにして"
+                        ]
+                    },
+                    "input_title": {
+                        "type": "string",
+                        "title": "プロンプトの入力元",
+                        "examples": [
+                            "背景の修正指示"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "session_id",
+                    "prompt_id",
+                    "field_name",
+                    "input_text",
+                    "input_title"
+                ],
+                "title": "UserInputPromptRequest",
+                "description": "ユーザー入力プロンプト送信用（リクエスト）"
+            },
+            "UserModel": {
+                "properties": {
+                    "username": {
+                        "type": "string",
+                        "title": "Username",
+                        "examples": [
+                            "user1"
+                        ]
+                    },
+                    "password": {
+                        "type": "string",
+                        "title": "Password",
+                        "examples": [
+                            "pass1"
+                        ]
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "username",
+                    "password"
+                ],
+                "title": "UserModel"
+            },
+            "ValidationError": {
+                "properties": {
+                    "loc": {
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "string"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        },
+                        "type": "array",
+                        "title": "Location"
+                    },
+                    "msg": {
+                        "type": "string",
+                        "title": "Message"
+                    },
+                    "type": {
+                        "type": "string",
+                        "title": "Error Type"
+                    }
+                },
+                "type": "object",
+                "required": [
+                    "loc",
+                    "msg",
+                    "type"
+                ],
+                "title": "ValidationError"
+            }
+        },
+        "securitySchemes": {
+            "OAuth2PasswordBearer": {
+                "type": "oauth2",
+                "flows": {
+                    "password": {
+                        "scopes": {},
+                        "tokenUrl": "/api/v2/authorization/swagger"
+                    }
+                }
+            }
+        }
+    }
+}

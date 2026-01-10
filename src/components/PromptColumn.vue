@@ -33,8 +33,8 @@
       <v-select
         v-model="selectedId"
         :items="availablePrompts"
-        item-title="name"
-        item-value="id"
+        item-title="title"
+        item-value="prompt_id"
         label="プロンプトを選択"
         variant="outlined"
         density="compact"
@@ -78,14 +78,14 @@
       <!-- プロンプトタイプ表示 -->
       <v-chip
         size="small"
-        :color="selectedPrompt.type === 'global' ? 'primary' : 'secondary'"
+        :color="selectedPrompt.prompt_target === 'all' ? 'primary' : 'secondary'"
         class="mb-3"
       >
-        {{ selectedPrompt.type === 'global' ? '全フィールド共通' : '個別フィールド用' }}
+        {{ selectedPrompt.prompt_target === 'all' ? '全フィールド共通' : '個別フィールド用' }}
       </v-chip>
 
-      <!-- 全フィールド共通プロンプト（type='global'の場合） -->
-      <template v-if="selectedPrompt.type === 'global'">
+      <!-- 全フィールド共通プロンプト（prompt_target='all'の場合） -->
+      <template v-if="selectedPrompt.prompt_target === 'all'">
         <v-card variant="outlined">
           <v-card-title class="text-subtitle-1">
             <v-icon icon="mdi-earth" size="small" class="mr-2" />
@@ -93,7 +93,7 @@
           </v-card-title>
           <v-card-text>
             <v-textarea
-              :model-value="promptMode === 'generate' ? selectedPrompt.globalPrompt : selectedPrompt.globalRevisePrompt"
+              :model-value="getGlobalPromptText()"
               :label="promptMode === 'generate' ? '共通生成プロンプト' : '共通修正プロンプト'"
               variant="outlined"
               rows="8"
@@ -105,12 +105,12 @@
         </v-card>
       </template>
 
-      <!-- フィールドごとのプロンプト（type='field'の場合） -->
+      <!-- フィールドごとのプロンプト（prompt_target='each'の場合） -->
       <template v-else>
         <div class="field-prompts-list">
           <v-card
             v-for="field in selectedDocumentFields"
-            :key="field.id"
+            :key="field.field_id"
             variant="outlined"
             class="mb-3"
           >
@@ -118,28 +118,28 @@
               <v-icon icon="mdi-form-textbox" size="small" class="mr-2" />
               {{ field.name }}
               <v-spacer />
-              <v-chip size="x-small" color="secondary">ID: {{ field.id.slice(-6) }}</v-chip>
+              <v-chip size="x-small" color="secondary">ID: {{ field.field_id.slice(-6) }}</v-chip>
             </v-card-title>
             <v-card-subtitle v-if="field.content" class="text-truncate">
               内容: {{ field.content }}
             </v-card-subtitle>
             <v-card-text>
               <v-textarea
-                :model-value="getFieldPromptText(field.id)"
+                :model-value="getFieldPromptText(field.field_id)"
                 :label="`${field.name}の${promptMode === 'generate' ? '生成' : '修正'}プロンプト`"
                 variant="outlined"
                 rows="2"
                 hide-details
                 :placeholder="`${field.name}の${promptMode === 'generate' ? '生成' : '修正'}時に使用するプロンプト...`"
-                @update:model-value="(val: string) => handleFieldPromptChange(field.id, val)"
+                @update:model-value="(val: string) => handleFieldPromptChange(field.field_id, val)"
               />
               <div v-if="promptMode === 'revise'" class="d-flex justify-end mt-2">
                 <v-btn
                   size="small"
                   variant="tonal"
                   color="secondary"
-                  :loading="appStore.generatingFieldId === field.id"
-                  :disabled="!getFieldPromptText(field.id)"
+                  :loading="appStore.generatingFieldId === field.field_id"
+                  :disabled="!getFieldPromptText(field.field_id)"
                   @click="handleFieldRegenerate(field)"
                 >
                   <v-icon icon="mdi-refresh" size="small" class="mr-1" />
@@ -183,15 +183,15 @@
             class="mb-3"
           />
           <v-select
-            v-model="newPromptType"
-            :items="promptTypeOptions"
+            v-model="newPromptTarget"
+            :items="promptTargetOptions"
             item-title="label"
             item-value="value"
             label="プロンプトタイプ"
             variant="outlined"
           />
           <v-alert
-            v-if="newPromptType === 'global'"
+            v-if="newPromptTarget === 'all'"
             type="info"
             variant="tonal"
             density="compact"
@@ -210,7 +210,7 @@
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="showCreateDialog = false">キャンセル</v-btn>
-          <v-btn color="primary" variant="flat" @click="handleCreate">作成</v-btn>
+          <v-btn color="primary" variant="flat" :loading="promptStore.loading" @click="handleCreate">作成</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -227,27 +227,27 @@
             class="mb-3"
           />
           <v-select
-            v-model="editPromptType"
-            :items="promptTypeOptions"
+            v-model="editPromptTarget"
+            :items="promptTargetOptions"
             item-title="label"
             item-value="value"
             label="プロンプトタイプ"
             variant="outlined"
           />
           <v-alert
-            v-if="editPromptType !== selectedPrompt?.type"
+            v-if="editPromptTarget !== selectedPrompt?.prompt_target"
             type="warning"
             variant="tonal"
             density="compact"
             class="mt-2"
           >
-            タイプを変更すると、現在の{{ selectedPrompt?.type === 'global' ? '全フィールド共通' : '個別フィールド' }}プロンプトが破棄されます
+            タイプを変更すると、現在の{{ selectedPrompt?.prompt_target === 'all' ? '全フィールド共通' : '個別フィールド' }}プロンプトが破棄されます
           </v-alert>
         </v-card-text>
         <v-card-actions>
           <v-spacer />
           <v-btn variant="text" @click="showEditDialog = false">キャンセル</v-btn>
-          <v-btn color="primary" variant="flat" @click="handleUpdate">保存</v-btn>
+          <v-btn color="primary" variant="flat" :loading="promptStore.loading" @click="handleUpdate">保存</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -255,11 +255,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { usePromptStore } from '@/stores/prompts'
 import { useDocumentStore } from '@/stores/documents'
 import { useAppStore } from '@/stores/app'
-import type { PromptMode, PromptType } from '@/types'
+import type { PromptMode, PromptTarget, FieldItemModel } from '@/types'
 
 const promptStore = usePromptStore()
 const docStore = useDocumentStore()
@@ -277,16 +277,16 @@ const showEditDialog = ref(false)
 
 // 新規作成用
 const newPromptName = ref('')
-const newPromptType = ref<PromptType>('global')
+const newPromptTarget = ref<PromptTarget>('all')
 
 // 編集用
 const editPromptName = ref('')
-const editPromptType = ref<PromptType>('global')
+const editPromptTarget = ref<PromptTarget>('all')
 
 // プロンプトタイプオプション
-const promptTypeOptions = [
-  { label: '全フィールド共通', value: 'global' },
-  { label: '個別フィールド用', value: 'field' },
+const promptTargetOptions = [
+  { label: '全フィールド共通', value: 'all' },
+  { label: '個別フィールド用', value: 'each' },
 ]
 
 // 使用可能なプロンプト（選択文書に紐づくもの）
@@ -305,7 +305,16 @@ const selectedPrompt = computed(() => {
 const selectedDocumentFields = computed(() => {
   if (!appStore.selectedDocumentId) return []
   const doc = docStore.getById(appStore.selectedDocumentId)
-  return doc?.fields || []
+  return doc?.field_items || []
+})
+
+// 初期化時にプロンプト一覧を取得
+onMounted(async () => {
+  try {
+    await promptStore.fetchList()
+  } catch (e) {
+    console.error('プロンプト一覧の取得に失敗:', e)
+  }
 })
 
 // 選択変更時にストアに反映
@@ -328,146 +337,158 @@ watch(() => appStore.promptMode, (mode) => {
   promptMode.value = mode
 })
 
+// 全フィールド共通プロンプトのテキストを取得
+function getGlobalPromptText(): string {
+  if (!selectedPrompt.value) return ''
+  const fp = selectedPrompt.value.field_prompt_items?.find(f => f.field_id === null)
+  if (!fp) return ''
+  return promptMode.value === 'generate' ? fp.generation_prompt : fp.correction_prompt
+}
+
 // フィールドプロンプトのテキストを取得
 function getFieldPromptText(fieldId: string): string {
   if (!selectedPrompt.value) return ''
-  const fp = selectedPrompt.value.fieldPrompts.find(f => f.fieldId === fieldId)
+  const fp = selectedPrompt.value.field_prompt_items?.find(f => f.field_id === fieldId)
   if (!fp) return ''
-  return promptMode.value === 'generate' ? fp.generatePrompt : fp.revisePrompt
+  return promptMode.value === 'generate' ? fp.generation_prompt : fp.correction_prompt
 }
 
 // 全フィールド共通プロンプト変更
 function handleGlobalPromptChange(value: string) {
   if (!selectedId.value) return
   const updates = promptMode.value === 'generate'
-    ? { globalPrompt: value }
-    : { globalRevisePrompt: value }
-  promptStore.update(selectedId.value, updates)
+    ? { generation_prompt: value }
+    : { correction_prompt: value }
+  promptStore.updateFieldPromptLocal(selectedId.value, null, updates)
 }
 
 // フィールドプロンプト変更
 function handleFieldPromptChange(fieldId: string, value: string) {
   if (!selectedId.value) return
   const updates = promptMode.value === 'generate'
-    ? { generatePrompt: value }
-    : { revisePrompt: value }
-  promptStore.updateFieldPrompt(selectedId.value, fieldId, updates)
+    ? { generation_prompt: value }
+    : { correction_prompt: value }
+  promptStore.updateFieldPromptLocal(selectedId.value, fieldId, updates)
 }
 
 // 個別フィールド再生成処理（ストリーム対応モック実装）
-async function handleFieldRegenerate(field: { id: string; name: string; content: string }) {
+async function handleFieldRegenerate(field: FieldItemModel) {
   if (!selectedPrompt.value) return
-  
+
   const doc = docStore.getById(appStore.selectedDocumentId!)
   if (!doc) return
-  
-  appStore.setGeneratingFieldId(field.id)
-  
+
+  appStore.setGeneratingFieldId(field.field_id)
+
   // 生成後表示に自動切り替え
   appStore.setViewMode('after')
-  
+
   // プロンプトテキストを取得
-  const promptText = getFieldPromptText(field.id)
-  
+  const promptText = getFieldPromptText(field.field_id)
+
   // モック生成（実際はAPIからストリーム）
   const mockContent = promptMode.value === 'generate'
     ? `【${field.name}の生成結果】\n\n${promptText}を適用して生成された内容です。\n\n元の内容: ${field.content}\n`
     : `【${field.name}の修正結果】\n\n${promptText}を適用して修正された内容です。\n\n元の内容: ${field.content}\n`
-  
+
   // 文字を1つずつ追加してストリーム風に表示
   let result = ''
   for (const char of mockContent) {
     await new Promise(resolve => setTimeout(resolve, 15))
     result += char
-    
+
     // フィールドコンテンツを更新
-    appStore.setFieldContent(field.id, result)
-    
+    appStore.setFieldContent(field.field_id, result)
+
     // 全フィールドの結果をまとめてリアルタイムで反映
-    const fullContent = appStore.buildGeneratedContentFromFields(doc.fields)
+    const fullContent = appStore.buildGeneratedContentFromFields(doc.field_items || [])
     appStore.setGeneratedContent(fullContent)
   }
-  
+
   appStore.setGeneratingFieldId(null)
 }
 
 // 編集ダイアログを開く
 function openEditDialog() {
   if (!selectedPrompt.value) return
-  editPromptName.value = selectedPrompt.value.name
-  editPromptType.value = selectedPrompt.value.type
+  editPromptName.value = selectedPrompt.value.title
+  editPromptTarget.value = selectedPrompt.value.prompt_target
   showEditDialog.value = true
 }
 
 // 作成処理
-function handleCreate() {
+async function handleCreate() {
   if (!newPromptName.value.trim() || !appStore.selectedDocumentId) return
-  
+
   // 選択中の文書のフィールドを取得
   const doc = docStore.getById(appStore.selectedDocumentId)
   if (!doc) return
 
-  const prompt = promptStore.create(
-    appStore.selectedDocumentId,
-    newPromptName.value.trim(),
-    newPromptType.value,
-    doc.fields
-  )
-  selectedId.value = prompt.id
-  showCreateDialog.value = false
-  newPromptName.value = ''
-  newPromptType.value = 'global'
+  try {
+    const prompt = await promptStore.create(
+      appStore.selectedDocumentId,
+      newPromptName.value.trim(),
+      newPromptTarget.value,
+      doc.field_items || []
+    )
+    selectedId.value = prompt.prompt_id
+    showCreateDialog.value = false
+    newPromptName.value = ''
+    newPromptTarget.value = 'all'
+  } catch (e) {
+    console.error('プロンプトの作成に失敗:', e)
+  }
 }
 
 // 更新処理
-function handleUpdate() {
+async function handleUpdate() {
   if (!selectedId.value || !editPromptName.value.trim() || !selectedPrompt.value) return
-  
-  const typeChanged = editPromptType.value !== selectedPrompt.value.type
-  
-  if (typeChanged) {
-    // タイプが変更された場合、古いデータを破棄して新しいタイプ用のデータを生成
-    const doc = docStore.getById(appStore.selectedDocumentId!)
-    if (!doc) return
-    
-    if (editPromptType.value === 'field') {
-      // global -> field: フィールドプロンプトを生成、グローバルを破棄
-      const fieldPrompts = doc.fields.map(field => ({
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        fieldId: field.id,
-        generatePrompt: '',
-        revisePrompt: '',
-      }))
-      promptStore.update(selectedId.value, {
-        name: editPromptName.value.trim(),
-        type: 'field',
-        globalPrompt: '',
-        globalRevisePrompt: '',
-        fieldPrompts,
+
+  const targetChanged = editPromptTarget.value !== selectedPrompt.value.prompt_target
+
+  try {
+    if (targetChanged) {
+      // タイプが変更された場合、古いデータを破棄して新しいタイプ用のデータを生成
+      const doc = docStore.getById(appStore.selectedDocumentId!)
+      if (!doc) return
+
+      const fieldPromptItems = editPromptTarget.value === 'each'
+        ? (doc.field_items || []).map(field => ({
+            field_id: field.field_id,
+            generation_prompt: '',
+            correction_prompt: '',
+          }))
+        : [{
+            field_id: null,
+            generation_prompt: '',
+            correction_prompt: '',
+          }]
+
+      await promptStore.update(selectedId.value, {
+        title: editPromptName.value.trim(),
+        promptTarget: editPromptTarget.value,
+        fieldPromptItems,
       })
     } else {
-      // field -> global: グローバルを初期化、フィールドプロンプトを破棄
-      promptStore.update(selectedId.value, {
-        name: editPromptName.value.trim(),
-        type: 'global',
-        globalPrompt: '',
-        globalRevisePrompt: '',
-        fieldPrompts: [],
-      })
+      // タイプ変更なし: 名前のみ更新
+      await promptStore.update(selectedId.value, { title: editPromptName.value.trim() })
     }
-  } else {
-    // タイプ変更なし: 名前のみ更新
-    promptStore.update(selectedId.value, { name: editPromptName.value.trim() })
+
+    showEditDialog.value = false
+  } catch (e) {
+    console.error('プロンプトの更新に失敗:', e)
   }
-  
-  showEditDialog.value = false
 }
 
 // 削除処理
-function handleDelete() {
+async function handleDelete() {
   if (!selectedId.value) return
-  promptStore.remove(selectedId.value)
-  selectedId.value = null
+  try {
+    await promptStore.remove(selectedId.value)
+    selectedId.value = null
+  } catch (e) {
+    console.error('プロンプトの削除に失敗:', e)
+  }
 }
 </script>
 
