@@ -6,6 +6,21 @@
         <v-icon icon="mdi-file-document-edit" class="mr-2" />
         文書生成アプリケーション
       </v-app-bar-title>
+
+      <template #append>
+        <div class="d-flex align-center">
+          <v-chip size="small" variant="tonal" class="mr-2">
+            <v-icon icon="mdi-account" start size="small" />
+            {{ authStore.username || 'ユーザー' }}
+          </v-chip>
+          <v-btn
+            icon="mdi-logout"
+            size="small"
+            variant="text"
+            @click="handleLogout"
+          />
+        </div>
+      </template>
     </v-app-bar>
 
     <v-main>
@@ -19,9 +34,24 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import DocumentColumn from '@/components/DocumentColumn.vue'
 import PromptColumn from '@/components/PromptColumn.vue'
 import GenerateColumn from '@/components/GenerateColumn.vue'
+
+const router = useRouter()
+const authStore = useAuthStore()
+
+onMounted(() => {
+  authStore.initialize()
+})
+
+function handleLogout() {
+  authStore.logout()
+  router.push('/login')
+}
 </script>
 
 <style scoped>
