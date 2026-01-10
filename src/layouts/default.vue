@@ -9,7 +9,7 @@
 
       <template #append>
         <div class="d-flex align-center">
-          <v-chip class="mr-2" size="small" variant="tonal">
+          <v-chip class="mr-2" size="small" variant="tonal" color="secondary">
             <v-icon icon="mdi-account" size="small" start />
             {{ authStore.username || 'ユーザー' }}
           </v-chip>
@@ -17,13 +17,14 @@
             icon="mdi-logout"
             size="small"
             variant="text"
+            color="secondary"
             @click="handleLogout"
           />
         </div>
       </template>
     </v-app-bar>
 
-    <v-main>
+    <v-main class="main-content">
       <div class="main-layout">
         <DocumentColumn class="column document-column" />
         <PromptColumn class="column prompt-column" />
@@ -56,25 +57,30 @@
 
 <style scoped>
 .app-header {
-  background: #b8d4e3 !important; /* 薄いくすんだ水色 */
-  color: #2c3e50 !important;
+  background: #C5D8E0 !important; /* くすんだ水色 */
+  color: #3A4A54 !important;
 }
 
 .app-header :deep(.v-toolbar-title) {
-  font-weight: 600;
+  font-weight: 500;
+}
+
+.main-content {
+  background: #F5F7F8;
 }
 
 .main-layout {
   display: flex;
-  height: calc(100vh - 48px); /* ヘッダー分を引く */
+  height: calc(100vh - 48px);
   overflow: hidden;
 }
 
 .column {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  border-right: 1px solid #D8E2E7;
   overflow: hidden;
+  background: #FFFFFF;
 }
 
 .column:last-child {
@@ -85,6 +91,7 @@
   width: 280px;
   min-width: 280px;
   flex-shrink: 0;
+  background: #EDF1F3;
 }
 
 .prompt-column {
@@ -95,5 +102,6 @@
 .generate-column {
   flex: 1;
   min-width: 300px;
+  background: #F8FAFB;
 }
 </style>

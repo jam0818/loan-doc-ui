@@ -5,54 +5,56 @@ meta:
 
 <template>
   <v-container class="login-container" fluid>
-    <v-row align="center" class="fill-height" justify="center">
-      <v-col cols="12" lg="3" md="4" sm="6">
+    <v-row align="center" justify="center" class="fill-height">
+      <v-col cols="12" sm="6" md="4" lg="3">
         <!-- タイトル -->
         <div class="text-center mb-6">
-          <v-icon class="mb-2" color="primary" icon="mdi-file-document-edit" size="48" />
-          <h1 class="text-h5 font-weight-medium">文書生成アプリケーション</h1>
+          <v-icon icon="mdi-file-document-edit" size="48" color="primary" class="mb-2" />
+          <h1 class="text-h5 font-weight-medium text-secondary">文書生成アプリケーション</h1>
         </div>
 
         <!-- ログインフォーム -->
         <v-form @submit.prevent="handleLogin">
           <v-text-field
             v-model="username"
-            class="mb-3"
-            density="comfortable"
             label="ユーザー名"
-            prepend-inner-icon="mdi-account"
             variant="outlined"
+            density="comfortable"
+            prepend-inner-icon="mdi-account"
+            bg-color="white"
+            class="mb-3"
           />
 
           <v-text-field
             v-model="password"
-            :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-            class="mb-3"
-            density="comfortable"
             label="パスワード"
+            variant="outlined"
+            density="comfortable"
             prepend-inner-icon="mdi-lock"
             :type="showPassword ? 'text' : 'password'"
-            variant="outlined"
+            :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+            bg-color="white"
             @click:append-inner="showPassword = !showPassword"
+            class="mb-3"
           />
 
           <v-alert
             v-if="authStore.error"
-            class="mb-3"
-            density="compact"
             type="error"
             variant="tonal"
+            density="compact"
+            class="mb-3"
           >
             {{ authStore.error }}
           </v-alert>
 
           <v-btn
-            block
-            color="primary"
-            :disabled="!isFormValid"
-            :loading="authStore.loading"
-            size="large"
             type="submit"
+            color="primary"
+            size="large"
+            block
+            :loading="authStore.loading"
+            :disabled="!isFormValid"
           >
             ログイン
           </v-btn>
@@ -63,38 +65,38 @@ meta:
 </template>
 
 <script setup lang="ts">
-  import { computed, ref } from 'vue'
-  import { useRouter } from 'vue-router'
-  import { useAuthStore } from '@/stores/auth'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
-  const router = useRouter()
-  const authStore = useAuthStore()
+const router = useRouter()
+const authStore = useAuthStore()
 
-  const username = ref('')
-  const password = ref('')
-  const showPassword = ref(false)
+const username = ref('')
+const password = ref('')
+const showPassword = ref(false)
 
-  const isFormValid = computed(() => {
-    return username.value.trim() !== '' && password.value.trim() !== ''
+const isFormValid = computed(() => {
+  return username.value.trim() !== '' && password.value.trim() !== ''
+})
+
+async function handleLogin() {
+  if (!isFormValid.value) return
+
+  const success = await authStore.login({
+    username: username.value,
+    password: password.value,
   })
 
-  async function handleLogin () {
-    if (!isFormValid.value) return
-
-    const success = await authStore.login({
-      username: username.value,
-      password: password.value,
-    })
-
-    if (success) {
-      router.push('/')
-    }
+  if (success) {
+    router.push('/')
   }
+}
 </script>
 
 <style scoped>
 .login-container {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #EDF1F3;
 }
 </style>
