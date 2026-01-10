@@ -107,11 +107,12 @@
 
       <!-- フィールドごとのプロンプト（prompt_target='each'の場合） -->
       <template v-else>
-        <v-expansion-panels class="field-prompts-list" variant="accordion">
+        <v-expansion-panels v-model="expandedPanels" class="field-prompts-list" multiple>
           <v-expansion-panel
-            v-for="field in selectedDocumentFields"
+            v-for="(field, index) in selectedDocumentFields"
             :key="field.field_id"
             class="mb-2"
+            :value="index"
           >
             <v-expansion-panel-title>
               <div class="d-flex align-center" style="width: 100%;">
@@ -332,6 +333,14 @@
     const doc = docStore.getById(appStore.selectedDocumentId)
     return doc?.field_items || []
   })
+
+  // 展開パネルの状態（初期はすべて展開）
+  const expandedPanels = ref<number[]>([])
+
+  // フィールドが変更されたらすべて展開
+  watch(selectedDocumentFields, fields => {
+    expandedPanels.value = fields.map((_, index) => index)
+  }, { immediate: true })
 
   // 初期化時にプロンプト一覧を取得
   onMounted(async () => {
