@@ -107,29 +107,37 @@
 
       <!-- フィールドごとのプロンプト（prompt_target='each'の場合） -->
       <template v-else>
-        <div class="field-prompts-list">
-          <v-card
+        <v-expansion-panels class="field-prompts-list" variant="accordion">
+          <v-expansion-panel
             v-for="field in selectedDocumentFields"
             :key="field.field_id"
-            class="mb-3"
-            variant="outlined"
+            class="mb-2"
           >
-            <v-card-title class="text-subtitle-1 d-flex align-center">
-              <v-icon class="mr-2" icon="mdi-form-textbox" size="small" />
-              {{ field.name }}
-              <v-spacer />
-              <v-chip color="secondary" size="x-small">ID: {{ field.field_id.slice(-6) }}</v-chip>
-            </v-card-title>
-            <v-card-subtitle v-if="field.content" class="text-truncate">
-              内容: {{ field.content }}
-            </v-card-subtitle>
-            <v-card-text>
+            <v-expansion-panel-title>
+              <div class="d-flex align-center" style="width: 100%;">
+                <v-icon class="mr-2" icon="mdi-form-textbox" size="small" />
+                <span class="font-weight-medium">{{ field.name }}</span>
+                <v-spacer />
+                <v-chip
+                  v-if="getFieldPromptText(field.field_id)"
+                  class="mr-2"
+                  color="success"
+                  size="x-small"
+                >
+                  設定済
+                </v-chip>
+              </div>
+            </v-expansion-panel-title>
+            <v-expansion-panel-text>
+              <div v-if="field.content" class="text-caption text-medium-emphasis mb-2">
+                内容: {{ field.content }}
+              </div>
               <v-textarea
                 hide-details
                 :label="`${field.name}の${promptMode === 'generate' ? '生成' : '修正'}プロンプト`"
                 :model-value="getFieldPromptText(field.field_id)"
                 :placeholder="`${field.name}の${promptMode === 'generate' ? '生成' : '修正'}時に使用するプロンプト...`"
-                rows="2"
+                rows="3"
                 variant="outlined"
                 @update:model-value="(val: string) => handleFieldPromptChange(field.field_id, val)"
               />
@@ -146,9 +154,9 @@
                   再生成
                 </v-btn>
               </div>
-            </v-card-text>
-          </v-card>
-        </div>
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </v-expansion-panels>
       </template>
     </div>
 
