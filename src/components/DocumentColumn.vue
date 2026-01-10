@@ -151,7 +151,7 @@
           </div>
           <v-card
             v-for="(field, index) in editFields"
-            :key="field.field_id"
+            :key="field.field_id ?? `new-${index}`"
             class="mb-3 pa-3"
             variant="outlined"
           >
