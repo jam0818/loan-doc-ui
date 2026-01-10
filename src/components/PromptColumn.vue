@@ -251,6 +251,22 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- 削除確認ダイアログ -->
+    <v-dialog v-model="showDeleteConfirm" max-width="400">
+      <v-card>
+        <v-card-title class="text-h6">削除の確認</v-card-title>
+        <v-card-text>
+          <p>「{{ selectedPrompt?.title }}」を削除しますか？</p>
+          <p class="text-medium-emphasis text-caption mt-2">この操作は取り消せません。</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="showDeleteConfirm = false">キャンセル</v-btn>
+          <v-btn color="error" :loading="promptStore.loading" variant="flat" @click="confirmDelete">削除</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -274,6 +290,7 @@
   // ダイアログ状態
   const showCreateDialog = ref(false)
   const showEditDialog = ref(false)
+  const showDeleteConfirm = ref(false)
 
   // 新規作成用
   const newPromptName = ref('')
@@ -480,12 +497,19 @@
     }
   }
 
-  // 削除処理
-  async function handleDelete () {
+  // 削除確認表示
+  function handleDelete () {
+    if (!selectedId.value) return
+    showDeleteConfirm.value = true
+  }
+
+  // 削除実行
+  async function confirmDelete () {
     if (!selectedId.value) return
     try {
       await promptStore.remove(selectedId.value)
       selectedId.value = null
+      showDeleteConfirm.value = false
     } catch (error) {
       console.error('プロンプトの削除に失敗:', error)
     }

@@ -9,15 +9,15 @@
 
       <template #append>
         <div class="d-flex align-center">
-          <v-chip class="mr-2" size="small" variant="tonal" color="secondary">
+          <v-chip class="mr-2" color="secondary" size="small" variant="tonal">
             <v-icon icon="mdi-account" size="small" start />
             {{ authStore.username || 'ユーザー' }}
           </v-chip>
           <v-btn
+            color="secondary"
             icon="mdi-logout"
             size="small"
             variant="text"
-            color="secondary"
             @click="handleLogout"
           />
         </div>
