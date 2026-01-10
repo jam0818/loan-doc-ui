@@ -2,7 +2,7 @@
   <v-app>
     <!-- ログインページはヘッダーなしのシンプルなレイアウト -->
     <v-main>
-      <slot />
+      <router-view />
     </v-main>
   </v-app>
 </template>
