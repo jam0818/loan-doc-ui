@@ -36,8 +36,8 @@ export default defineConfig({
 
     // 共通設定
     use: {
-        // ベースURL（開発サーバー）
-        baseURL: 'http://localhost:5173',
+        // ベースURL（環境変数から取得、デフォルトは3000）
+        baseURL: process.env.BASE_URL || 'http://localhost:3000',
 
         // トレース設定（失敗時に取得）
         trace: 'on-first-retry',
@@ -57,11 +57,11 @@ export default defineConfig({
         },
     ],
 
-    // 開発サーバーの起動設定
+    // 開発サーバーの起動設定（既存サーバーを常に再利用）
     webServer: {
         command: 'bun run dev',
-        url: 'http://localhost:5173',
-        reuseExistingServer: !process.env.CI,
+        url: process.env.BASE_URL || 'http://localhost:3000',
+        reuseExistingServer: true,
         timeout: 120 * 1000,
     },
 })

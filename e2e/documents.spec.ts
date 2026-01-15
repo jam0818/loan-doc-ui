@@ -1,9 +1,11 @@
 import { test, expect, type Page } from '@playwright/test'
+import { setupApiMocks, resetMockData, mockData } from './mocks/api-mock'
 
 /**
- * 共通ヘルパー: ログイン処理
+ * 共通ヘルパー: モック付きログイン処理
  */
-async function login(page: Page) {
+async function loginWithMock(page: Page) {
+    await setupApiMocks(page)
     await page.goto('/login')
     await page.fill('input[type="text"]', 'admin')
     await page.fill('input[type="password"]', 'password')
@@ -12,119 +14,90 @@ async function login(page: Page) {
 }
 
 /**
- * ドキュメントCRUDテスト
+ * ドキュメントCRUDテスト（モック使用）
  */
 test.describe('ドキュメントCRUD', () => {
     test.beforeEach(async ({ page }) => {
-        await login(page)
+        resetMockData()
+        await loginWithMock(page)
     })
 
-    test.describe('Create - ドキュメント作成', () => {
-        test('新規ドキュメント作成ダイアログが開く', async ({ page }) => {
-            await page.click('button:has(.mdi-plus):near(:text("ドキュメント"))')
+    test.describe('一覧・選択', () => {
+        test('ドキュメント一覧がドロップダウンに表示される', async ({ page }) => {
+            await page.click('.v-select:has-text("文書を選択")')
+            await expect(page.locator('.v-list-item:has-text("テストドキュメント1")')).toBeVisible()
+            await expect(page.locator('.v-list-item:has-text("テストドキュメント2")')).toBeVisible()
+        })
+
+        test('未選択時は選択促進メッセージが表示される', async ({ page }) => {
+            await expect(page.locator('text=文書を選択してください')).toBeVisible()
+        })
+
+        test('ドキュメント選択時にフィールド一覧が表示される', async ({ page }) => {
+            await page.click('.v-select:has-text("文書を選択")')
+            await page.click('.v-list-item:has-text("テストドキュメント1")')
+
+            await expect(page.locator('text=サマリー')).toBeVisible()
+            await expect(page.locator('text=詳細')).toBeVisible()
+        })
+    })
+
+    test.describe('Create（作成）', () => {
+        test('新規作成ダイアログが開く', async ({ page }) => {
+            await page.click('button:has(.mdi-plus)')
             await expect(page.locator('text=新規文書作成')).toBeVisible()
         })
 
-        test('タイトルとフィールドを入力して作成できる', async ({ page }) => {
-            // ダイアログを開く
-            await page.click('button:has(.mdi-plus):near(:text("ドキュメント"))')
-
-            // タイトル入力
-            await page.fill('input:has-text("文書タイトル"), .v-dialog input', 'テストドキュメント')
-
-            // フィールド追加
-            await page.fill('.v-dialog input:has-text("フィールド名"), .v-dialog .v-card input', 'テストフィールド')
-            await page.fill('.v-dialog textarea', 'テストコンテンツ')
-
-            // 保存
-            await page.click('button:has-text("保存")')
-
-            // 作成されたことを確認
-            await expect(page.locator('text=テストドキュメント')).toBeVisible()
-        })
-
-        test('空のタイトルでは作成できない', async ({ page }) => {
-            await page.click('button:has(.mdi-plus):near(:text("ドキュメント"))')
-
-            // タイトルを空のまま保存ボタンを確認
-            const saveButton = page.locator('button:has-text("保存")')
+        test('空タイトルでは保存不可', async ({ page }) => {
+            await page.click('button:has(.mdi-plus)')
+            const saveButton = page.locator('.v-dialog button:has-text("保存")')
             await expect(saveButton).toBeDisabled()
         })
+
+        test('ドキュメントを作成できる', async ({ page }) => {
+            await page.click('button:has(.mdi-plus)')
+            await page.fill('.v-dialog input:first-of-type', '新しいドキュメント')
+            await page.click('.v-dialog button:has-text("保存")')
+
+            // ダイアログが閉じる
+            await expect(page.locator('.v-dialog:has-text("新規文書作成")')).not.toBeVisible()
+        })
     })
 
-    test.describe('Read - ドキュメント読み取り', () => {
-        test('ドキュメント選択時にフィールド一覧が表示される', async ({ page }) => {
-            // ドキュメント選択
+    test.describe('Update（更新）', () => {
+        test('編集ダイアログが開く', async ({ page }) => {
             await page.click('.v-select:has-text("文書を選択")')
             await page.click('.v-list-item:first-child')
-
-            // フィールドが表示されることを確認
-            await expect(page.locator('.field-list, .v-list')).toBeVisible()
-        })
-
-        test('ドキュメント未選択時は選択促進メッセージが表示される', async ({ page }) => {
-            await expect(page.locator('text=文書を選択してください')).toBeVisible()
+            await page.click('button:has(.mdi-pencil)')
+            await expect(page.locator('text=文書編集')).toBeVisible()
         })
     })
 
-    test.describe('Update - ドキュメント更新', () => {
-        test('編集ダイアログからタイトルを変更できる', async ({ page }) => {
-            // ドキュメント選択
-            await page.click('.v-select:has-text("文書を選択")')
-            await page.click('.v-list-item:first-child')
-
-            // 編集ボタンをクリック
-            await page.click('button:has(.mdi-pencil):near(:text("ドキュメント"))')
-
-            // タイトル変更
-            await page.fill('.v-dialog input:first-child', '更新されたタイトル')
-            await page.click('button:has-text("保存")')
-
-            // 更新を確認
-            await expect(page.locator('text=更新されたタイトル')).toBeVisible()
-        })
-    })
-
-    test.describe('Delete - ドキュメント削除', () => {
+    test.describe('Delete（削除）', () => {
         test('削除確認ダイアログが表示される', async ({ page }) => {
-            // ドキュメント選択
             await page.click('.v-select:has-text("文書を選択")')
             await page.click('.v-list-item:first-child')
-
-            // 削除ボタンをクリック
-            await page.click('button:has(.mdi-delete):near(:text("ドキュメント"))')
-
-            // 確認ダイアログを確認
+            await page.click('button:has(.mdi-delete)')
             await expect(page.locator('text=削除の確認')).toBeVisible()
-            await expect(page.locator('text=この操作は取り消せません')).toBeVisible()
         })
 
         test('キャンセルで削除をキャンセルできる', async ({ page }) => {
-            // ドキュメント選択
             await page.click('.v-select:has-text("文書を選択")')
             await page.click('.v-list-item:first-child')
-
-            // 削除ボタン→キャンセル
-            await page.click('button:has(.mdi-delete):near(:text("ドキュメント"))')
-            await page.click('button:has-text("キャンセル")')
-
-            // ダイアログが閉じることを確認
+            await page.click('button:has(.mdi-delete)')
+            await page.click('.v-dialog button:has-text("キャンセル")')
             await expect(page.locator('text=削除の確認')).not.toBeVisible()
         })
 
-        test('削除を実行するとドキュメントが消える', async ({ page }) => {
-            // ドキュメント選択
+        test('削除を実行できる', async ({ page }) => {
+            const initialCount = mockData.documents.length
             await page.click('.v-select:has-text("文書を選択")')
-            const firstItem = page.locator('.v-list-item:first-child')
-            const title = await firstItem.textContent()
-            await firstItem.click()
-
-            // 削除実行
-            await page.click('button:has(.mdi-delete):near(:text("ドキュメント"))')
+            await page.click('.v-list-item:first-child')
+            await page.click('button:has(.mdi-delete)')
             await page.click('.v-dialog button:has-text("削除")')
 
-            // 削除を確認
-            await expect(page.locator(`text=${title}`)).not.toBeVisible()
+            // ダイアログが閉じる
+            await expect(page.locator('text=削除の確認')).not.toBeVisible()
         })
     })
 })

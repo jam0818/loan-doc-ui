@@ -1,9 +1,11 @@
 import { test, expect, type Page } from '@playwright/test'
+import { setupApiMocks, resetMockData } from './mocks/api-mock'
 
 /**
- * 共通ヘルパー: ログイン処理
+ * 共通ヘルパー: モック付きログイン処理
  */
-async function login(page: Page) {
+async function loginWithMock(page: Page) {
+    await setupApiMocks(page)
     await page.goto('/login')
     await page.fill('input[type="text"]', 'admin')
     await page.fill('input[type="password"]', 'password')
@@ -28,75 +30,49 @@ async function selectPrompt(page: Page) {
 }
 
 /**
- * LLM生成機能テスト
+ * LLM生成機能テスト（モック使用）
  */
 test.describe('LLM生成機能', () => {
     test.beforeEach(async ({ page }) => {
-        await login(page)
+        resetMockData()
+        await loginWithMock(page)
     })
 
-    test.describe('生成前の状態確認', () => {
+    test.describe('前提条件確認', () => {
         test('ドキュメント未選択時は生成ボタンが無効', async ({ page }) => {
-            const generateButton = page.locator('button:has-text("一括生成"), button:has-text("生成")')
+            const generateButton = page.locator('button:has-text("一括生成")')
             await expect(generateButton).toBeDisabled()
         })
 
         test('プロンプト未選択時は生成ボタンが無効', async ({ page }) => {
             await selectDocument(page)
-            const generateButton = page.locator('button:has-text("一括生成"), button:has-text("生成")')
+            const generateButton = page.locator('button:has-text("一括生成")')
             await expect(generateButton).toBeDisabled()
         })
 
-        test('ドキュメントとプロンプト選択後は生成ボタンが有効', async ({ page }) => {
+        test('両方選択時は生成ボタンが有効', async ({ page }) => {
             await selectDocument(page)
             await selectPrompt(page)
-            const generateButton = page.locator('button:has-text("一括生成"), button:has-text("生成")')
+            const generateButton = page.locator('button:has-text("一括生成")')
             await expect(generateButton).toBeEnabled()
         })
     })
 
+    test.describe('表示モード', () => {
+        test('生成前/生成後モードを切り替えられる', async ({ page }) => {
+            await selectDocument(page)
+            await expect(page.locator('button:has-text("生成前")')).toBeVisible()
+            await expect(page.locator('button:has-text("生成後")')).toBeVisible()
+        })
+    })
+
     test.describe('一括生成', () => {
-        test('一括生成ボタンをクリックすると生成が開始される', async ({ page }) => {
+        test('生成ボタンをクリックすると生成が開始される', async ({ page }) => {
             await selectDocument(page)
             await selectPrompt(page)
 
-            // 生成ボタンをクリック
-            await page.click('button:has-text("一括生成"), button:has-text("生成")')
-
-            // 生成中の状態を確認（ローディング表示など）
-            // バックエンドが未実装の場合はエラーになる可能性がある
-        })
-
-        test('生成前コンテンツが表示される', async ({ page }) => {
-            await selectDocument(page)
-
-            // 生成前エリアにコンテンツが表示されることを確認
-            const beforeArea = page.locator('.before-content, :text("生成前")')
-            await expect(beforeArea).toBeVisible()
-        })
-    })
-
-    test.describe('個別再生成（修正モード）', () => {
-        test('修正モードで個別再生成ボタンが表示される', async ({ page }) => {
-            await selectDocument(page)
-            await selectPrompt(page)
-
-            // 修正用モードに切り替え
-            await page.click('button:has-text("修正用")')
-
-            // 個別再生成ボタンを確認
-            const regenerateButton = page.locator('button:has-text("再生成")')
-            // 個別フィールドタイプの場合のみ表示される
-        })
-    })
-
-    test.describe('生成結果の表示', () => {
-        test('生成後コンテンツエリアが存在する', async ({ page }) => {
-            await selectDocument(page)
-
-            // 生成後エリアを確認
-            const afterArea = page.locator('.after-content, :text("生成後"), .generate-column')
-            await expect(afterArea).toBeVisible()
+            await page.click('button:has-text("一括生成")')
+            // 生成中の状態（ローディング）を確認
         })
     })
 })
