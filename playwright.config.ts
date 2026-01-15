@@ -58,10 +58,11 @@ export default defineConfig({
     ],
 
     // 開発サーバーの起動設定（既存サーバーを常に再利用）
-    webServer: {
-        command: 'bun run dev',
-        url: process.env.BASE_URL || 'http://localhost:3000',
-        reuseExistingServer: true,
-        timeout: 120 * 1000,
-    },
+    // 手動でサーバーを起動してからテストを実行する場合はコメントアウト
+    // webServer: {
+    //   command: 'bun run dev',
+    //   url: process.env.BASE_URL || 'http://localhost:3000',
+    //   reuseExistingServer: true,
+    //   timeout: 120 * 1000,
+    // },
 })
