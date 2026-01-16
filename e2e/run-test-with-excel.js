@@ -29,7 +29,7 @@ function recordResult(result) {
     console.log(`${emoji} [${result.id}] ${result.name}: ${result.status}`)
 }
 
-// Excel出力
+// Excel出力（画像埋め込み対応）
 async function generateExcelReport() {
     const workbook = new ExcelJS.Workbook()
     workbook.creator = 'Playwright E2E Test'
@@ -43,13 +43,15 @@ async function generateExcelReport() {
         const sheetName = category.substring(0, 31)
 
         const worksheet = workbook.addWorksheet(sheetName)
+
+        // 列幅設定（エビデンス列を広くする）
         worksheet.columns = [
             { header: 'テストID', key: 'id', width: 10 },
-            { header: 'テスト名', key: 'name', width: 25 },
-            { header: '説明', key: 'description', width: 50 },
-            { header: '結果', key: 'status', width: 10 },
-            { header: '実行日時', key: 'timestamp', width: 25 },
-            { header: 'エビデンス', key: 'evidence', width: 40 },
+            { header: 'テスト名', key: 'name', width: 20 },
+            { header: '説明', key: 'description', width: 35 },
+            { header: '結果', key: 'status', width: 8 },
+            { header: '実行日時', key: 'timestamp', width: 22 },
+            { header: 'エビデンス画像', key: 'evidence', width: 60 },
         ]
 
         // ヘッダースタイル
@@ -59,17 +61,17 @@ async function generateExcelReport() {
             pattern: 'solid',
             fgColor: { argb: 'FF4472C4' },
         }
+        worksheet.getRow(1).height = 25
 
         // データ追加
+        let rowIndex = 2 // ヘッダーの次から
         for (const result of categoryResults) {
-            const row = worksheet.addRow({
-                id: result.id,
-                name: result.name,
-                description: result.description,
-                status: result.status,
-                timestamp: result.timestamp,
-                evidence: result.screenshotPath || '',
-            })
+            const row = worksheet.getRow(rowIndex)
+            row.getCell('id').value = result.id
+            row.getCell('name').value = result.name
+            row.getCell('description').value = result.description
+            row.getCell('status').value = result.status
+            row.getCell('timestamp').value = result.timestamp
 
             // 結果に応じて色を設定
             const statusCell = row.getCell('status')
@@ -86,10 +88,34 @@ async function generateExcelReport() {
                     fgColor: { argb: 'FFFF6B6B' },
                 }
             }
+
+            // 画像埋め込み
+            if (result.screenshotPath && fs.existsSync(result.screenshotPath)) {
+                try {
+                    const imageId = workbook.addImage({
+                        filename: result.screenshotPath,
+                        extension: 'png',
+                    })
+
+                    // 画像サイズに合わせて行の高さを設定（200px = 約150ポイント）
+                    row.height = 150
+
+                    // 画像をエビデンス列（列F = 5）に配置
+                    worksheet.addImage(imageId, {
+                        tl: { col: 5, row: rowIndex - 1 }, // 左上の位置
+                        ext: { width: 400, height: 180 }, // 画像サイズ
+                    })
+                } catch (e) {
+                    console.log(`⚠️ 画像埋め込み失敗: ${result.screenshotPath}`)
+                    row.getCell('evidence').value = result.screenshotPath
+                }
+            }
+
+            rowIndex++
         }
 
         // 罫線設定
-        worksheet.eachRow((row) => {
+        worksheet.eachRow((row, rowNum) => {
             row.eachCell((cell) => {
                 cell.border = {
                     top: { style: 'thin' },
@@ -97,6 +123,7 @@ async function generateExcelReport() {
                     bottom: { style: 'thin' },
                     right: { style: 'thin' },
                 }
+                cell.alignment = { vertical: 'middle', wrapText: true }
             })
         })
     }
