@@ -44,6 +44,10 @@ export interface TestResult {
     status: 'PASS' | 'FAIL' | 'SKIP'
     /** スクリーンショットのパス（オプション）*/
     screenshotPath?: string
+    /** 操作前スクリーンショット（オプション）*/
+    beforeScreenshotPath?: string
+    /** 操作後スクリーンショット（オプション）*/
+    afterScreenshotPath?: string
     /** エラーメッセージ（オプション）*/
     error?: string
     /** 実行日時（自動設定される）*/
@@ -346,14 +350,15 @@ export class TestReporter {
 
         const worksheet = workbook.addWorksheet(sheetName)
 
-        // 列設定
+        // 列設定（操作前・操作後のエビデンス列を追加）
         worksheet.columns = [
             { header: 'テストID', key: 'id', width: 10 },
             { header: 'テスト名', key: 'name', width: 20 },
             { header: '説明', key: 'description', width: 35 },
             { header: '結果', key: 'status', width: 8 },
             { header: '実行日時', key: 'timestamp', width: 22 },
-            { header: 'エビデンス', key: 'evidence', width: this.options.embedImages ? 60 : 40 },
+            { header: '操作前', key: 'beforeEvidence', width: this.options.embedImages ? 55 : 30 },
+            { header: '操作後', key: 'afterEvidence', width: this.options.embedImages ? 55 : 30 },
             { header: 'エラー', key: 'error', width: 30 },
         ]
 
@@ -384,23 +389,50 @@ export class TestReporter {
                 statusCell.fill = this.styles.skipFill
             }
 
-            // 画像埋め込み
-            if (this.options.embedImages && result.screenshotPath && fs.existsSync(result.screenshotPath)) {
+            // 行の高さを設定（画像用）
+            let needsHeight = false
+
+            // 操作前スクリーンショット埋め込み（列5: beforeEvidence）
+            const beforePath = result.beforeScreenshotPath ?? result.screenshotPath
+            if (this.options.embedImages && beforePath && fs.existsSync(beforePath)) {
                 try {
                     const imageId = workbook.addImage({
-                        filename: result.screenshotPath,
+                        filename: beforePath,
                         extension: 'png',
                     })
-                    row.height = this.options.rowHeight
                     worksheet.addImage(imageId, {
                         tl: { col: 5, row: rowIndex - 1 },
                         ext: this.options.imageSize,
                     })
+                    needsHeight = true
                 } catch {
-                    row.getCell('evidence').value = result.screenshotPath
+                    row.getCell('beforeEvidence').value = beforePath
                 }
-            } else if (result.screenshotPath) {
-                row.getCell('evidence').value = result.screenshotPath
+            } else if (beforePath) {
+                row.getCell('beforeEvidence').value = beforePath
+            }
+
+            // 操作後スクリーンショット埋め込み（列6: afterEvidence）
+            if (this.options.embedImages && result.afterScreenshotPath && fs.existsSync(result.afterScreenshotPath)) {
+                try {
+                    const imageId = workbook.addImage({
+                        filename: result.afterScreenshotPath,
+                        extension: 'png',
+                    })
+                    worksheet.addImage(imageId, {
+                        tl: { col: 6, row: rowIndex - 1 },
+                        ext: this.options.imageSize,
+                    })
+                    needsHeight = true
+                } catch {
+                    row.getCell('afterEvidence').value = result.afterScreenshotPath
+                }
+            } else if (result.afterScreenshotPath) {
+                row.getCell('afterEvidence').value = result.afterScreenshotPath
+            }
+
+            if (needsHeight) {
+                row.height = this.options.rowHeight
             }
 
             rowIndex++

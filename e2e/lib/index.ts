@@ -11,10 +11,17 @@ export {
     createReporter,
     loginViaUI,
     loginAndSetup,
+    logoutViaUI,
     createDocumentViaUI,
+    editDocumentViaUI,
     selectDocumentViaUI,
     deleteDocumentViaUI,
     createPromptViaUI,
+    editPromptViaUI,
+    deletePromptViaUI,
+    runGenerationViaUI,
+    updateGenerationResultViaUI,
     TEST_USER,
 } from './test-helpers'
-export type { TestConfig } from './test-helpers'
+export type { TestConfig, EvidenceOptions } from './test-helpers'
+export * from './test-helpers'

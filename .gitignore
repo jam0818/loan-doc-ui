@@ -23,3 +23,8 @@ pnpm-debug.log*
 
 # ドキュメント（自動生成）
 .docs/
+
+# E2Eテスト結果（自動生成）
+test-results/
+playwright-report/
+evidence/
