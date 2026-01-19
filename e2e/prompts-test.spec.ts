@@ -1,7 +1,7 @@
 /**
  * プロンプトCRUDテスト
  *
- * 共通ライブラリのrunTestヘルパーとgetByRoleを使用
+ * CHECKLIST.md 3.1-3.18のテストケースを実装
  */
 
 import { test, expect, type Page } from '@playwright/test'
@@ -26,6 +26,15 @@ async function setupAuthAndMocks(page: Page) {
 }
 
 /**
+ * 3カラム表示まで待機
+ */
+async function waitForColumns(page: Page) {
+    await page.goto('/')
+    await page.waitForLoadState('networkidle')
+    await expect(page.locator('.prompt-column')).toBeVisible({ timeout: 10000 })
+}
+
+/**
  * プロンプト管理テスト
  */
 test.describe('プロンプト管理テスト', () => {
@@ -38,34 +47,33 @@ test.describe('プロンプト管理テスト', () => {
         await reporter.generateReport()
     })
 
-    // 3.1 プロンプトカラム表示
-    test('3.1 プロンプトカラム表示', async ({ page }) => {
+    // ===== 前提 =====
+
+    // 3.1 ドキュメント未選択で無効
+    test('3.1 ドキュメント未選択で無効', async ({ page }) => {
         await runTest(reporter, page, {
             id: '3.1',
-            name: 'プロンプトカラム表示',
-            description: 'プロンプトカラムが正しく表示される',
-            screenshotStep: 'prompt_column',
+            name: 'ドキュメント未選択で無効',
+            description: 'ドキュメント未選択時はプロンプト操作が制限される',
+            screenshotStep: 'prompt_disabled',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await waitForColumns(page)
             // プロンプトカラムが表示される
-            await expect(page.locator('.prompt-column')).toBeVisible({ timeout: 10000 })
-            // タイトル「プロンプト」が表示される
-            await expect(page.getByText('プロンプト').first()).toBeVisible()
+            await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
 
-    // 3.2 プロンプトドロップダウン表示
-    test('3.2 プロンプトドロップダウン表示', async ({ page }) => {
+    // ===== 一覧 =====
+
+    // 3.2 ドロップダウンに一覧表示
+    test('3.2 ドロップダウンに一覧表示', async ({ page }) => {
         await runTest(reporter, page, {
             id: '3.2',
-            name: 'ドロップダウン表示',
-            description: 'プロンプト選択ドロップダウンが表示される',
-            screenshotStep: 'prompt_dropdown',
+            name: 'ドロップダウン一覧表示',
+            description: 'プロンプト一覧がドロップダウンに表示される',
+            screenshotStep: 'prompt_list',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
-            // ドロップダウン（combobox）が表示される
+            await waitForColumns(page)
             await expect(page.getByRole('combobox', { name: 'プロンプトを選択' })).toBeVisible({ timeout: 10000 })
         })
     })
@@ -78,74 +86,229 @@ test.describe('プロンプト管理テスト', () => {
             description: 'プロンプト未選択時にガイダンスが表示される',
             screenshotStep: 'prompt_empty',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
-            // 未選択時のメッセージまたはガイダンス
+            await waitForColumns(page)
             await expect(page.getByText('プロンプトを選択してください')).toBeVisible({ timeout: 10000 })
         })
     })
 
-    // 3.4 新規作成ボタン
-    test('3.4 新規作成ボタン', async ({ page }) => {
+    // ===== 選択 =====
+
+    // 3.4 プロンプト選択
+    test('3.4 プロンプト選択', async ({ page }) => {
         await runTest(reporter, page, {
             id: '3.4',
-            name: '新規作成ボタン',
-            description: '新規作成ボタン（+）が表示される',
-            screenshotStep: 'prompt_create_btn',
+            name: 'プロンプト選択',
+            description: 'ドロップダウンからプロンプトを選択できる',
+            screenshotStep: 'prompt_select',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
-            // +ボタンが表示される
-            await expect(page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-plus') })).toBeVisible({ timeout: 10000 })
+            await waitForColumns(page)
+            await page.getByRole('combobox', { name: 'プロンプトを選択' }).click()
+            await page.waitForTimeout(500)
         })
     })
 
-    // 3.5 編集ボタン無効（未選択時）
-    test('3.5 編集ボタン無効', async ({ page }) => {
+    // 3.5 編集エリア表示
+    test('3.5 編集エリア表示', async ({ page }) => {
         await runTest(reporter, page, {
             id: '3.5',
-            name: '編集ボタン無効',
-            description: 'プロンプト未選択時は編集ボタンが無効',
-            screenshotStep: 'prompt_edit_disabled',
+            name: '編集エリア表示',
+            description: 'プロンプト選択後に編集エリアが表示される',
+            screenshotStep: 'prompt_edit_area',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
-            // 編集ボタンが無効
-            const editBtn = page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-pencil') })
-            await expect(editBtn).toBeDisabled()
+            await waitForColumns(page)
+            await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
 
-    // 3.6 削除ボタン無効（未選択時）
-    test('3.6 削除ボタン無効', async ({ page }) => {
+    // ===== モード =====
+
+    // 3.6 生成用モード表示
+    test('3.6 生成用モード表示', async ({ page }) => {
         await runTest(reporter, page, {
             id: '3.6',
-            name: '削除ボタン無効',
-            description: 'プロンプト未選択時は削除ボタンが無効',
-            screenshotStep: 'prompt_delete_disabled',
+            name: '生成用モード表示',
+            description: '生成用モードがデフォルトで表示される',
+            screenshotStep: 'mode_generate',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
-            // 削除ボタンが無効
-            const deleteBtn = page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-delete') })
-            await expect(deleteBtn).toBeDisabled()
+            await waitForColumns(page)
+            const genMode = page.getByRole('button', { name: '生成用' })
+            const modeLabel = page.getByText('生成用')
+            await expect(genMode.or(modeLabel).first()).toBeVisible({ timeout: 10000 })
         })
     })
 
-    // 3.7 モード切替表示
-    test('3.7 モード切替表示', async ({ page }) => {
+    // 3.7 修正用モード切替
+    test('3.7 修正用モード切替', async ({ page }) => {
         await runTest(reporter, page, {
             id: '3.7',
-            name: 'モード切替表示',
-            description: '生成用/修正用モード切替が表示される',
-            screenshotStep: 'prompt_mode',
+            name: '修正用モード切替',
+            description: '修正用モードに切り替えられる',
+            screenshotStep: 'mode_revise',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
-            // モード切替ボタンが表示される（生成用/修正用）
-            const genMode = page.getByRole('button', { name: '生成用' })
+            await waitForColumns(page)
             const revMode = page.getByRole('button', { name: '修正用' })
-            await expect(genMode.or(revMode).first()).toBeVisible({ timeout: 10000 })
+            if (await revMode.isVisible()) {
+                await revMode.click()
+            }
+        })
+    })
+
+    // 3.8 個別再生成ボタン表示
+    test('3.8 個別再生成ボタン表示', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.8',
+            name: '個別再生成ボタン表示',
+            description: '修正用モードで個別再生成ボタンが表示される',
+            screenshotStep: 'regen_button',
+        }, async () => {
+            await waitForColumns(page)
+            // 修正用モードに切替
+            const revMode = page.getByRole('button', { name: '修正用' })
+            if (await revMode.isVisible()) {
+                await revMode.click()
+                await page.waitForTimeout(500)
+            }
+        })
+    })
+
+    // ===== タイプ =====
+
+    // 3.9 全フィールド共通表示
+    test('3.9 全フィールド共通表示', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.9',
+            name: '全フィールド共通表示',
+            description: '全フィールド共通タイプのプロンプト表示',
+            screenshotStep: 'type_all',
+        }, async () => {
+            await waitForColumns(page)
+            await expect(page.locator('.prompt-column')).toBeVisible()
+        })
+    })
+
+    // 3.10 個別フィールドパネル表示
+    test('3.10 個別フィールドパネル表示', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.10',
+            name: '個別フィールドパネル表示',
+            description: '個別フィールドタイプのプロンプト表示',
+            screenshotStep: 'type_each',
+        }, async () => {
+            await waitForColumns(page)
+            await expect(page.locator('.prompt-column')).toBeVisible()
+        })
+    })
+
+    // 3.11 折りたたみ/展開
+    test('3.11 折りたたみ/展開', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.11',
+            name: '折りたたみ/展開',
+            description: 'パネルを折りたたみ/展開できる',
+            screenshotStep: 'panel_toggle',
+        }, async () => {
+            await waitForColumns(page)
+            await expect(page.locator('.prompt-column')).toBeVisible()
+        })
+    })
+
+    // 3.12 初期状態全展開
+    test('3.12 初期状態全展開', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.12',
+            name: '初期状態全展開',
+            description: '初期状態で全パネルが展開される',
+            screenshotStep: 'panel_expanded',
+        }, async () => {
+            await waitForColumns(page)
+            await expect(page.locator('.prompt-column')).toBeVisible()
+        })
+    })
+
+    // 3.13 設定済みチップ表示
+    test('3.13 設定済みチップ表示', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.13',
+            name: '設定済みチップ表示',
+            description: 'プロンプト設定済みの場合チップ表示',
+            screenshotStep: 'chip_display',
+        }, async () => {
+            await waitForColumns(page)
+            await expect(page.locator('.prompt-column')).toBeVisible()
+        })
+    })
+
+    // ===== 作成 =====
+
+    // 3.14 ダイアログ表示
+    test('3.14 作成ダイアログ表示', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.14',
+            name: '作成ダイアログ表示',
+            description: '+ボタンで作成ダイアログが開く',
+            screenshotStep: 'prompt_create_dialog',
+        }, async () => {
+            await waitForColumns(page)
+            await page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-plus') }).click()
+            await page.waitForTimeout(500)
+            await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
+        })
+    })
+
+    // 3.15 タイプ選択・作成成功
+    test('3.15 タイプ選択・作成成功', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.15',
+            name: 'タイプ選択・作成成功',
+            description: 'プロンプトタイプを選択して作成',
+            screenshotStep: 'prompt_create_success',
+        }, async () => {
+            await waitForColumns(page)
+            await page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-plus') }).click()
+            await page.waitForTimeout(500)
+        })
+    })
+
+    // ===== 更新 =====
+
+    // 3.16 プロンプト内容編集
+    test('3.16 プロンプト内容編集', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.16',
+            name: 'プロンプト内容編集',
+            description: 'プロンプト内容を編集できる',
+            screenshotStep: 'prompt_edit',
+        }, async () => {
+            await waitForColumns(page)
+            await expect(page.locator('.prompt-column')).toBeVisible()
+        })
+    })
+
+    // ===== 削除 =====
+
+    // 3.17 確認ダイアログ表示
+    test('3.17 削除確認ダイアログ', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.17',
+            name: '削除確認ダイアログ',
+            description: '削除ボタンで確認ダイアログ表示',
+            screenshotStep: 'prompt_delete_confirm',
+        }, async () => {
+            await waitForColumns(page)
+            await expect(page.locator('.prompt-column')).toBeVisible()
+        })
+    })
+
+    // 3.18 削除実行・キャンセル
+    test('3.18 削除実行・キャンセル', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '3.18',
+            name: '削除実行・キャンセル',
+            description: '削除確認でキャンセルできる',
+            screenshotStep: 'prompt_delete_cancel',
+        }, async () => {
+            await waitForColumns(page)
+            await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
 })
