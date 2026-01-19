@@ -1,77 +1,14 @@
 /**
- * 認証機能テスト（ライブラリ使用版）
+ * 認証機能テスト
  *
- * TestReporterライブラリを使用してExcelレポートを生成
+ * ライブラリ共通のrunTestヘルパーを使用
  */
 
-import { test, expect, type Page } from '@playwright/test'
-import { TestReporter } from './lib/test-reporter'
+import { test, expect } from '@playwright/test'
+import { runTest, createReporter } from './lib'
 
-// レポーターインスタンス（固定ファイル名 + 永続化で統合）
-const reporter = new TestReporter({
-    outputDir: 'test-results',
-    screenshotDir: 'test-results/screenshots',
-    reportPrefix: 'e2e-test-report',
-    embedImages: true,
-    useFixedFileName: true,   // 固定ファイル名（上書き）
-    persistResults: true,     // 結果をJSONに保存・読み込み
-})
-
-/**
- * テスト実行ヘルパー
- *
- * テストロジックを実行し、結果を自動記録
- * categoryを省略すると、test.describeの名前を使用
- */
-async function runTest(
-    page: Page,
-    config: {
-        id: string
-        category?: string  // 省略時はtest.info()から取得
-        name: string
-        description: string
-        screenshotStep?: string
-    },
-    testFn: () => Promise<void>
-): Promise<void> {
-    // Playwrightのテスト情報から親describe名を取得
-    // titlePath構造: [ファイル名, describe名, テスト名, ...]
-    const testInfo = test.info()
-    // describe名があればそれを使用、なければファイル名からフォールバック
-    const category = config.category
-        ?? testInfo.titlePath[1]  // describe名
-        ?? testInfo.titlePath[0]?.replace(/\.spec\.ts$/, '')
-        ?? 'テスト'
-
-    let status: 'PASS' | 'FAIL' = 'FAIL'
-    let screenshotPath: string | undefined
-    let error: string | undefined
-
-    try {
-        await testFn()
-        status = 'PASS'
-    } catch (e) {
-        error = String(e)
-    }
-
-    // スクリーンショット撮影
-    if (config.screenshotStep) {
-        screenshotPath = reporter.getScreenshotPath(config.id, config.screenshotStep)
-        await page.screenshot({ path: screenshotPath, fullPage: true })
-    }
-
-    reporter.addResult({
-        id: config.id,
-        category,
-        name: config.name,
-        description: config.description,
-        status,
-        screenshotPath,
-        error,
-    })
-
-    expect(status).toBe('PASS')
-}
+// 共通レポーター
+const reporter = createReporter()
 
 /**
  * 認証機能テスト
@@ -82,7 +19,7 @@ test.describe('認証機能テスト', () => {
     })
 
     test('1.1 ログインページ表示', async ({ page }) => {
-        await runTest(page, {
+        await runTest(reporter, page, {
             id: '1.1',
             name: 'ログインページ表示',
             description: 'ログインページが正しく表示される',
@@ -94,7 +31,7 @@ test.describe('認証機能テスト', () => {
     })
 
     test('1.2 空フィールドでボタン無効', async ({ page }) => {
-        await runTest(page, {
+        await runTest(reporter, page, {
             id: '1.2',
             name: '空フィールド無効',
             description: '入力欄が空の場合ログインボタンが無効',
@@ -106,7 +43,7 @@ test.describe('認証機能テスト', () => {
     })
 
     test('1.3 ログイン情報入力', async ({ page }) => {
-        await runTest(page, {
+        await runTest(reporter, page, {
             id: '1.3',
             name: 'ログイン情報入力',
             description: 'ユーザー名とパスワードを入力するとボタンが有効',
@@ -120,7 +57,7 @@ test.describe('認証機能テスト', () => {
     })
 
     test('1.4 ログインボタンクリック', async ({ page }) => {
-        await runTest(page, {
+        await runTest(reporter, page, {
             id: '1.4',
             name: 'ログインボタンクリック',
             description: 'ログインボタンをクリックできる',
