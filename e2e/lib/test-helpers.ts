@@ -421,3 +421,57 @@ export function createReporter(): TestReporter {
         persistResults: true,
     })
 }
+
+/**
+ * ステップ実行ヘルパー
+ * 操作前後のスクリーンショットを撮影しながらアクションを実行する
+ * 
+ * @param page Playwright Page object
+ * @param testId テストID（ファイル名のプレフィックスに使用）
+ * @param stepName ステップ名（ファイル名の一部に使用）
+ * @param action 実行するアクション
+ * @returns 撮影したスクリーンショットのパス（before, after）
+ */
+export async function captureStep(
+    page: Page,
+    testId: string,
+    stepName: string,
+    action: () => Promise<void>
+): Promise<{ beforePath: string; afterPath: string }> {
+    // タイムスタンプを含めて一意にする（オプション）
+    const safeTestId = testId.replace(/[^a-z0-9-_]/gi, '_')
+    const safeStepName = stepName.replace(/[^a-z0-9-_]/gi, '_')
+    // test-results/screenshots/ 以下の相対パスを返す（TestReporterとの整合性）
+    // 実際の保存は絶対パスで行う必要があるが、Playwrightは相対パスでもcwd基準で動作する
+    // TestReporter.getScreenshotPath は "screenshots/..." を返すが、
+    // ここでは単純に保存先を指定する。
+
+    // TestReporterと整合性を取るため、test-results/screenshots/ に保存
+    const baseDir = 'test-results/screenshots'
+    const fileNameBase = `${safeTestId}_${safeStepName}`
+
+    const beforePath = `${baseDir}/${fileNameBase}_01_before.png`
+    const afterPath = `${baseDir}/${fileNameBase}_02_after.png`
+    const errorPath = `${baseDir}/${fileNameBase}_99_error.png`
+
+    try {
+        // 1. 直前のスクショ
+        await page.screenshot({ path: beforePath, fullPage: true }).catch(() => { })
+
+        // 2. アクション実行
+        await action()
+
+        // 画面遷移やレンダリング待ち（少し待機して安定させる）
+        await page.waitForTimeout(500)
+
+        // 3. 直後のスクショ
+        await page.screenshot({ path: afterPath, fullPage: true }).catch(() => { })
+
+        return { beforePath, afterPath }
+    } catch (error) {
+        // エラー時もスクショを撮る
+        await page.screenshot({ path: errorPath, fullPage: true }).catch(() => { })
+        // エラー時はafterPathをエラー画像にする
+        return { beforePath, afterPath: errorPath }
+    }
+}

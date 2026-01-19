@@ -4,7 +4,7 @@
  * チェックリスト準拠: docs/test-scenarios-checklist.md
  */
 import { test, expect } from '@playwright/test'
-import { createReporter, loginAndSetup, createDocumentViaUI } from '../lib'
+import { createReporter, loginAndSetup, createDocumentViaUI, captureStep } from '../lib'
 
 const reporter = createReporter()
 
@@ -20,16 +20,9 @@ test.describe('ドキュメント管理シナリオ', () => {
     // ===== 作成シナリオ =====
 
     test('DOC-01: 作成成功（タイトルのみ）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-01', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-01', 'after')
-
-        await page.screenshot({ path: beforePath, fullPage: true })
-
-        // === CODEGEN: タイトル入力 → 作成 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: ダイアログ閉じ、リストに表示
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-01', 'create_action', async () => {
+            // === CODEGEN: タイトル入力 → 作成 ===
+        })
 
         reporter.addResult({
             id: 'DOC-01', category: 'ドキュメント', name: '作成成功（タイトルのみ）',
@@ -39,16 +32,9 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-02: 作成成功（フィールド付き）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-02', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-02', 'after')
-
-        await page.screenshot({ path: beforePath, fullPage: true })
-
-        // === CODEGEN: タイトル + フィールド追加 → 作成 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: フィールドも保存
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-02', 'create_with_fields', async () => {
+            // === CODEGEN: タイトル + フィールド追加 → 作成 ===
+        })
 
         reporter.addResult({
             id: 'DOC-02', category: 'ドキュメント', name: '作成成功（フィールド付き）',
@@ -58,16 +44,9 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-03: 作成キャンセル', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-03', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-03', 'after')
-
-        await page.screenshot({ path: beforePath, fullPage: true })
-
-        // === CODEGEN: ダイアログ開く → キャンセル ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: ダイアログ閉じ、作成されない
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-03', 'cancel_action', async () => {
+            // === CODEGEN: ダイアログ開く → キャンセル ===
+        })
 
         reporter.addResult({
             id: 'DOC-03', category: 'ドキュメント', name: '作成キャンセル',
@@ -77,16 +56,9 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-04: 作成バリデーション（タイトル空）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-04', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-04', 'after')
-
-        await page.screenshot({ path: beforePath, fullPage: true })
-
-        // === CODEGEN: タイトル空で作成 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: ダイアログ閉じない
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-04', 'validation_error', async () => {
+            // === CODEGEN: タイトル空で作成 ===
+        })
 
         reporter.addResult({
             id: 'DOC-04', category: 'ドキュメント', name: '作成バリデーション（タイトル空）',
@@ -98,16 +70,9 @@ test.describe('ドキュメント管理シナリオ', () => {
     // ===== フィールド操作 =====
 
     test('DOC-05: フィールド追加', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-05', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-05', 'after')
-
-        await page.screenshot({ path: beforePath, fullPage: true })
-
-        // === CODEGEN: 「フィールド追加」ボタンクリック ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: フィールド入力欄が追加
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-05', 'add_field', async () => {
+            // === CODEGEN: 「フィールド追加」ボタンクリック ===
+        })
 
         reporter.addResult({
             id: 'DOC-05', category: 'ドキュメント', name: 'フィールド追加',
@@ -117,16 +82,9 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-06: フィールド削除', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-06', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-06', 'after')
-
-        await page.screenshot({ path: beforePath, fullPage: true })
-
-        // === CODEGEN: フィールドの削除ボタンクリック ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: フィールドが削除
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-06', 'remove_field', async () => {
+            // === CODEGEN: フィールドの削除ボタンクリック ===
+        })
 
         reporter.addResult({
             id: 'DOC-06', category: 'ドキュメント', name: 'フィールド削除',
@@ -136,16 +94,9 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-07: 複数フィールド追加', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-07', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-07', 'after')
-
-        await page.screenshot({ path: beforePath, fullPage: true })
-
-        // === CODEGEN: 3つのフィールドを追加して作成 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 全フィールド保存
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-07', 'add_multiple_fields', async () => {
+            // === CODEGEN: 3つのフィールドを追加して作成 ===
+        })
 
         reporter.addResult({
             id: 'DOC-07', category: 'ドキュメント', name: '複数フィールド追加',
@@ -157,17 +108,11 @@ test.describe('ドキュメント管理シナリオ', () => {
     // ===== 編集シナリオ =====
 
     test('DOC-08: 編集成功（タイトル変更）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-08', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-08', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: タイトル変更 → 保存 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 新タイトル表示
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-08', 'edit_title', async () => {
+            // === CODEGEN: タイトル変更 → 保存 ===
+        })
 
         reporter.addResult({
             id: 'DOC-08', category: 'ドキュメント', name: '編集成功（タイトル変更）',
@@ -177,17 +122,11 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-09: 編集成功（フィールド追加）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-09', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-09', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: フィールド追加 → 保存 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: フィールド増加
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-09', 'edit_add_field', async () => {
+            // === CODEGEN: フィールド追加 → 保存 ===
+        })
 
         reporter.addResult({
             id: 'DOC-09', category: 'ドキュメント', name: '編集成功（フィールド追加）',
@@ -197,17 +136,11 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-10: 編集成功（フィールド削除）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-10', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-10', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`, [{ name: '削除対象', content: 'テスト' }])
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: フィールド削除 → 保存 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: フィールド減少
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-10', 'edit_remove_field', async () => {
+            // === CODEGEN: フィールド削除 → 保存 ===
+        })
 
         reporter.addResult({
             id: 'DOC-10', category: 'ドキュメント', name: '編集成功（フィールド削除）',
@@ -217,17 +150,11 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-11: 編集キャンセル', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-11', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-11', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 変更 → キャンセル ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 変更反映されない
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-11', 'edit_cancel', async () => {
+            // === CODEGEN: 変更 → キャンセル ===
+        })
 
         reporter.addResult({
             id: 'DOC-11', category: 'ドキュメント', name: '編集キャンセル',
@@ -237,17 +164,11 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-12: 編集バリデーション（タイトル空）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-12', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-12', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: タイトル空で保存 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: ダイアログ閉じない
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-12', 'edit_validation', async () => {
+            // === CODEGEN: タイトル空で保存 ===
+        })
 
         reporter.addResult({
             id: 'DOC-12', category: 'ドキュメント', name: '編集バリデーション（タイトル空）',
@@ -259,17 +180,11 @@ test.describe('ドキュメント管理シナリオ', () => {
     // ===== 削除シナリオ =====
 
     test('DOC-13: 削除成功', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-13', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-13', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 削除 → 確認ダイアログで実行 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: ドキュメント消える
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-13', 'delete_action', async () => {
+            // === CODEGEN: 削除 → 確認ダイアログで実行 ===
+        })
 
         reporter.addResult({
             id: 'DOC-13', category: 'ドキュメント', name: '削除成功',
@@ -279,17 +194,11 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-14: 削除キャンセル', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-14', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-14', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 削除 → キャンセル ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: ドキュメント残存
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-14', 'delete_cancel', async () => {
+            // === CODEGEN: 削除 → キャンセル ===
+        })
 
         reporter.addResult({
             id: 'DOC-14', category: 'ドキュメント', name: '削除キャンセル',
@@ -301,17 +210,10 @@ test.describe('ドキュメント管理シナリオ', () => {
     // ===== ボタン状態 =====
 
     test('DOC-15: 編集ボタン無効', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-15', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-15', 'after')
-
-        await page.screenshot({ path: beforePath, fullPage: true })
-
         // ドキュメント未選択状態
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: disabled
-        // await expect(page.locator('.document-column .mdi-pencil').first()).toBeDisabled()
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-15', 'check_edit_disabled', async () => {
+            // 編集ボタンが無効であることを確認
+        })
 
         reporter.addResult({
             id: 'DOC-15', category: 'ドキュメント', name: '編集ボタン無効',
@@ -321,16 +223,10 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-16: 削除ボタン無効', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-16', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-16', 'after')
-
-        await page.screenshot({ path: beforePath, fullPage: true })
-
         // ドキュメント未選択状態
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: disabled
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-16', 'check_delete_disabled', async () => {
+            // 削除ボタンが無効であることを確認
+        })
 
         reporter.addResult({
             id: 'DOC-16', category: 'ドキュメント', name: '削除ボタン無効',
@@ -342,17 +238,11 @@ test.describe('ドキュメント管理シナリオ', () => {
     // ===== 選択・表示 =====
 
     test('DOC-17: ドキュメント選択', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-17', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-17', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: ドロップダウンから選択 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 詳細表示、プロンプト列有効化
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-17', 'select_document', async () => {
+            // === CODEGEN: ドロップダウンから選択 ===
+        })
 
         reporter.addResult({
             id: 'DOC-17', category: 'ドキュメント', name: 'ドキュメント選択',
@@ -362,17 +252,11 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-18: 選択クリア', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-18', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-18', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: クリアボタン ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 選択解除、編集/削除ボタン無効
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-18', 'clear_selection', async () => {
+            // === CODEGEN: クリアボタン ===
+        })
 
         reporter.addResult({
             id: 'DOC-18', category: 'ドキュメント', name: '選択クリア',
@@ -382,18 +266,12 @@ test.describe('ドキュメント管理シナリオ', () => {
     })
 
     test('DOC-19: 選択切替', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('DOC-19', 'before')
-        const afterPath = reporter.getScreenshotPath('DOC-19', 'after')
-
         await createDocumentViaUI(page, `DocA_${Date.now()}`)
         await createDocumentViaUI(page, `DocB_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 別ドキュメント選択 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 詳細が切り替わる
+        const { beforePath, afterPath } = await captureStep(page, 'DOC-19', 'switch_selection', async () => {
+            // === CODEGEN: 別ドキュメント選択 ===
+        })
 
         reporter.addResult({
             id: 'DOC-19', category: 'ドキュメント', name: '選択切替',

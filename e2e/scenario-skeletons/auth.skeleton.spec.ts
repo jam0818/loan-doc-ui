@@ -4,7 +4,7 @@
  * チェックリスト準拠: docs/test-scenarios-checklist.md
  */
 import { test, expect } from '@playwright/test'
-import { createReporter, loginAndSetup, loginViaUI, logoutViaUI, TEST_USER } from '../lib'
+import { createReporter, loginAndSetup, loginViaUI, logoutViaUI, captureStep, TEST_USER } from '../lib'
 
 const reporter = createReporter()
 
@@ -16,15 +16,14 @@ test.describe('認証シナリオ', () => {
     // ===== 正常系 =====
 
     test('AUTH-01: ログイン成功', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('AUTH-01', 'before')
-        const afterPath = reporter.getScreenshotPath('AUTH-01', 'after')
-
         await page.goto('http://localhost:3000')
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: user1/password入力 → ログイン ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'AUTH-01', 'login_action', async () => {
+            // === CODEGEN: user1/password入力 → ログイン ===
+            // await page.getByLabel('ユーザー名').fill('user1')
+            // await page.getByLabel('パスワード').fill('password')
+            // await page.getByRole('button', { name: 'ログイン' }).click()
+        })
 
         // 検証: メイン画面に遷移
         // await expect(page.getByText('ドキュメント')).toBeVisible()
@@ -37,15 +36,12 @@ test.describe('認証シナリオ', () => {
     })
 
     test('AUTH-02: セッション維持', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('AUTH-02', 'before')
-        const afterPath = reporter.getScreenshotPath('AUTH-02', 'after')
-
         await loginAndSetup(page)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: ページをリロード ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'AUTH-02', 'reload', async () => {
+            // === CODEGEN: ページをリロード ===
+            await page.reload()
+        })
 
         // 検証: ログイン状態維持
         // await expect(page.getByText('user1')).toBeVisible()
@@ -58,15 +54,11 @@ test.describe('認証シナリオ', () => {
     })
 
     test('AUTH-03: ログアウト成功', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('AUTH-03', 'before')
-        const afterPath = reporter.getScreenshotPath('AUTH-03', 'after')
-
         await loginAndSetup(page)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: ログアウトボタンクリック ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'AUTH-03', 'logout_action', async () => {
+            // === CODEGEN: ログアウトボタンクリック ===
+        })
 
         // 検証: ログイン画面に遷移
         // await expect(page.getByRole('button', { name: 'ログイン' })).toBeVisible()
@@ -81,15 +73,11 @@ test.describe('認証シナリオ', () => {
     // ===== 異常系・境界値 =====
 
     test('AUTH-04: ログイン失敗', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('AUTH-04', 'before')
-        const afterPath = reporter.getScreenshotPath('AUTH-04', 'after')
-
         await page.goto('http://localhost:3000')
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: invalid/wrong入力 → ログイン ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'AUTH-04', 'login_fail', async () => {
+            // === CODEGEN: invalid/wrong入力 → ログイン ===
+        })
 
         // 検証: エラーメッセージ表示
         // await expect(page.getByText('認証失敗')).toBeVisible()
@@ -102,15 +90,11 @@ test.describe('認証シナリオ', () => {
     })
 
     test('AUTH-05: ボタン無効（ユーザー名空）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('AUTH-05', 'before')
-        const afterPath = reporter.getScreenshotPath('AUTH-05', 'after')
-
         await page.goto('http://localhost:3000')
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: パスワードのみ入力 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'AUTH-05', 'check_disabled', async () => {
+            // === CODEGEN: パスワードのみ入力など ===
+        })
 
         // 検証: ボタンdisabled
         // await expect(page.getByRole('button', { name: 'ログイン' })).toBeDisabled()
@@ -123,18 +107,11 @@ test.describe('認証シナリオ', () => {
     })
 
     test('AUTH-06: ボタン無効（パスワード空）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('AUTH-06', 'before')
-        const afterPath = reporter.getScreenshotPath('AUTH-06', 'after')
-
         await page.goto('http://localhost:3000')
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: ユーザー名のみ入力 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: ボタンdisabled
-        // await expect(page.getByRole('button', { name: 'ログイン' })).toBeDisabled()
+        const { beforePath, afterPath } = await captureStep(page, 'AUTH-06', 'check_disabled', async () => {
+            // === CODEGEN: ユーザー名のみ入力 ===
+        })
 
         reporter.addResult({
             id: 'AUTH-06', category: '認証', name: 'ボタン無効（パスワード空）',
@@ -144,18 +121,11 @@ test.describe('認証シナリオ', () => {
     })
 
     test('AUTH-07: ボタン無効（両方空）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('AUTH-07', 'before')
-        const afterPath = reporter.getScreenshotPath('AUTH-07', 'after')
-
         await page.goto('http://localhost:3000')
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // 何も入力しない状態
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: ボタンdisabled
-        // await expect(page.getByRole('button', { name: 'ログイン' })).toBeDisabled()
+        const { beforePath, afterPath } = await captureStep(page, 'AUTH-07', 'check_disabled', async () => {
+            // 何も入力しない状態
+        })
 
         reporter.addResult({
             id: 'AUTH-07', category: '認証', name: 'ボタン無効（両方空）',

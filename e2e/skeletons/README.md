@@ -41,6 +41,7 @@ npx playwright test e2e/scenarios/my-test.spec.ts
 | ファイル | 説明 | 用途 |
 |---------|------|------|
 | `basic-template.spec.ts` | シンプルな基本テンプレート | 最初のテスト作成に |
+| `with-step-capture.spec.ts` | **推奨** ステップ実行ラッパー版 | `captureStep`で操作をラップ。コードが綺麗でスクショ自動化 |
 | `with-error-handling.spec.ts` | try-catch付きテンプレート | エラー時もレポートに記録したい場合 |
 | `with-helpers.spec.ts` | ヘルパー関数活用版 | 共通操作はヘルパー使用、検証のみCodegen |
 

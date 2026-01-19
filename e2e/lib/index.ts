@@ -21,6 +21,7 @@ export {
     deletePromptViaUI,
     runGenerationViaUI,
     updateGenerationResultViaUI,
+    captureStep,
     TEST_USER,
 } from './test-helpers'
 export type { TestConfig, EvidenceOptions } from './test-helpers'

@@ -4,7 +4,7 @@
  * チェックリスト準拠: docs/test-scenarios-checklist.md
  */
 import { test, expect } from '@playwright/test'
-import { createReporter, loginAndSetup, createDocumentViaUI, createPromptViaUI } from '../lib'
+import { createReporter, loginAndSetup, createDocumentViaUI, createPromptViaUI, captureStep } from '../lib'
 
 const reporter = createReporter()
 
@@ -20,15 +20,11 @@ test.describe('プロンプト管理シナリオ', () => {
     // ===== 作成シナリオ =====
 
     test('PROMPT-01: 作成成功（全体タイプ）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-01', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-01', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 名前 + 全フィールド共通 → 作成 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-01', 'create_all', async () => {
+            // === CODEGEN: 名前 + 全フィールド共通 → 作成 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-01', category: 'プロンプト', name: '作成成功（全体タイプ）',
@@ -38,15 +34,11 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-02: 作成成功（個別タイプ）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-02', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-02', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 名前 + 個別フィールド用 → 作成 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-02', 'create_each', async () => {
+            // === CODEGEN: 名前 + 個別フィールド用 → 作成 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-02', category: 'プロンプト', name: '作成成功（個別タイプ）',
@@ -56,15 +48,11 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-03: 作成キャンセル', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-03', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-03', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: ダイアログ開く → キャンセル ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-03', 'create_cancel', async () => {
+            // === CODEGEN: ダイアログ開く → キャンセル ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-03', category: 'プロンプト', name: '作成キャンセル',
@@ -74,15 +62,11 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-04: 作成バリデーション（名前空）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-04', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-04', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 名前空で作成 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-04', 'validation_error', async () => {
+            // === CODEGEN: 名前空で作成 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-04', category: 'プロンプト', name: '作成バリデーション（名前空）',
@@ -92,16 +76,10 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-05: 作成ボタン無効', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-05', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-05', 'after')
-
-        await page.screenshot({ path: beforePath, fullPage: true })
-
         // ドキュメント未選択時
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: ボタンdisabled
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-05', 'check_disabled', async () => {
+            // === CODEGEN ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-05', category: 'プロンプト', name: '作成ボタン無効',
@@ -113,16 +91,12 @@ test.describe('プロンプト管理シナリオ', () => {
     // ===== 編集シナリオ =====
 
     test('PROMPT-06: 編集成功（名前変更）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-06', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-06', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `Prompt_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 名前変更 → 保存 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-06', 'edit_name', async () => {
+            // === CODEGEN: 名前変更 → 保存 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-06', category: 'プロンプト', name: '編集成功（名前変更）',
@@ -132,18 +106,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-07: 編集成功（タイプ変更警告）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-07', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-07', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `Prompt_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: タイプを変更 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 警告メッセージ表示
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-07', 'change_type', async () => {
+            // === CODEGEN: タイプを変更 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-07', category: 'プロンプト', name: '編集成功（タイプ変更警告）',
@@ -153,16 +121,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-08: 編集キャンセル', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-08', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-08', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `Prompt_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 変更 → キャンセル ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-08', 'edit_cancel', async () => {
+            // === CODEGEN: 変更 → キャンセル ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-08', category: 'プロンプト', name: '編集キャンセル',
@@ -172,16 +136,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-09: 編集バリデーション（名前空）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-09', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-09', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `Prompt_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 名前空で保存 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-09', 'edit_validation', async () => {
+            // === CODEGEN: 名前空で保存 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-09', category: 'プロンプト', name: '編集バリデーション（名前空）',
@@ -191,15 +151,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-10: 編集ボタン無効', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-10', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-10', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
         // プロンプト未選択時
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-10', 'check_edit_disabled', async () => {
+            // === CODEGEN ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-10', category: 'プロンプト', name: '編集ボタン無効',
@@ -211,16 +168,12 @@ test.describe('プロンプト管理シナリオ', () => {
     // ===== 削除シナリオ =====
 
     test('PROMPT-11: 削除成功', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-11', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-11', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `Prompt_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 削除 → 確認ダイアログで実行 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-11', 'delete_action', async () => {
+            // === CODEGEN: 削除 → 確認ダイアログで実行 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-11', category: 'プロンプト', name: '削除成功',
@@ -230,16 +183,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-12: 削除キャンセル', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-12', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-12', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `Prompt_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 削除 → キャンセル ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-12', 'delete_cancel', async () => {
+            // === CODEGEN: 削除 → キャンセル ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-12', category: 'プロンプト', name: '削除キャンセル',
@@ -249,15 +198,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-13: 削除ボタン無効', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-13', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-13', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
         // プロンプト未選択時
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-13', 'check_delete_disabled', async () => {
+            // === CODEGEN ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-13', category: 'プロンプト', name: '削除ボタン無効',
@@ -269,16 +215,12 @@ test.describe('プロンプト管理シナリオ', () => {
     // ===== プロンプトテキスト編集 =====
 
     test('PROMPT-14: 全体プロンプト入力', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-14', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-14', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `Prompt_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: テキストエリアに入力 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-14', 'input_text', async () => {
+            // === CODEGEN: テキストエリアに入力 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-14', category: 'プロンプト', name: '全体プロンプト入力',
@@ -288,16 +230,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-15: 個別プロンプト入力', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-15', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-15', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`, [{ name: 'フィールド1', content: 'テスト' }])
         await createPromptViaUI(page, `Prompt_${Date.now()}`, 'each')
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: フィールドごとにテキスト入力 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-15', 'input_each', async () => {
+            // === CODEGEN: フィールドごとにテキスト入力 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-15', category: 'プロンプト', name: '個別プロンプト入力',
@@ -307,17 +245,13 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-16: プロンプト切替（選択）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-16', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-16', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `PromptA_${Date.now()}`)
         await createPromptViaUI(page, `PromptB_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: ドロップダウンで別プロンプト選択 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-16', 'switch_prompt', async () => {
+            // === CODEGEN: ドロップダウンで別プロンプト選択 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-16', category: 'プロンプト', name: 'プロンプト切替（選択）',
@@ -329,18 +263,13 @@ test.describe('プロンプト管理シナリオ', () => {
     // ===== モード切替 =====
 
     test('PROMPT-17: 生成用モード表示', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-17', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-17', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `Prompt_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // 初期状態
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 「生成用プロンプト」アラート
+        // 初期状態で確認
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-17', 'check_mode', async () => {
+            // === CODEGEN ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-17', category: 'プロンプト', name: '生成用モード表示',
@@ -350,18 +279,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-18: 修正用モード切替', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-18', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-18', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `Prompt_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 「修正用」ボタンクリック ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 「修正用プロンプト」アラート
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-18', 'switch_mode', async () => {
+            // === CODEGEN: 「修正用」ボタンクリック ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-18', category: 'プロンプト', name: '修正用モード切替',
@@ -371,16 +294,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-19: モード切替往復', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-19', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-19', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`)
         await createPromptViaUI(page, `Prompt_${Date.now()}`)
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 生成用 ↔ 修正用 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-19', 'toggle_mode', async () => {
+            // === CODEGEN: 生成用 ↔ 修正用 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-19', category: 'プロンプト', name: 'モード切替往復',
@@ -392,18 +311,12 @@ test.describe('プロンプト管理シナリオ', () => {
     // ===== 個別フィールドプロンプト =====
 
     test('PROMPT-20: エキスパンションパネル展開', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-20', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-20', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`, [{ name: 'フィールド1', content: 'テスト' }])
         await createPromptViaUI(page, `Prompt_${Date.now()}`, 'each')
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: フィールド名クリック ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: テキストエリア表示
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-20', 'expand_panel', async () => {
+            // === CODEGEN: フィールド名クリック ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-20', category: 'プロンプト', name: 'エキスパンションパネル展開',
@@ -413,18 +326,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-21: 設定済チップ', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-21', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-21', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`, [{ name: 'フィールド1', content: 'テスト' }])
         await createPromptViaUI(page, `Prompt_${Date.now()}`, 'each')
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: フィールドにプロンプト入力 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 「設定済」チップ表示
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-21', 'check_chip', async () => {
+            // === CODEGEN: フィールドにプロンプト入力 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-21', category: 'プロンプト', name: '設定済チップ',
@@ -434,18 +341,12 @@ test.describe('プロンプト管理シナリオ', () => {
     })
 
     test('PROMPT-22: 再生成ボタン（修正用モード）', async ({ page }) => {
-        const beforePath = reporter.getScreenshotPath('PROMPT-22', 'before')
-        const afterPath = reporter.getScreenshotPath('PROMPT-22', 'after')
-
         await createDocumentViaUI(page, `Doc_${Date.now()}`, [{ name: 'フィールド1', content: 'テスト' }])
         await createPromptViaUI(page, `Prompt_${Date.now()}`, 'each')
-        await page.screenshot({ path: beforePath, fullPage: true })
 
-        // === CODEGEN: 修正用モードでフィールド展開 ===
-
-        await page.screenshot({ path: afterPath, fullPage: true })
-
-        // 検証: 「再生成」ボタン表示
+        const { beforePath, afterPath } = await captureStep(page, 'PROMPT-22', 'check_regenerate', async () => {
+            // === CODEGEN: 修正用モードでフィールド展開 ===
+        })
 
         reporter.addResult({
             id: 'PROMPT-22', category: 'プロンプト', name: '再生成ボタン（修正用モード）',
