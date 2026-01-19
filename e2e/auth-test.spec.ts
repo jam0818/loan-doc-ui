@@ -7,12 +7,14 @@
 import { test, expect, type Page } from '@playwright/test'
 import { TestReporter } from './lib/test-reporter'
 
-// レポーターインスタンス
+// レポーターインスタンス（固定ファイル名 + 永続化で統合）
 const reporter = new TestReporter({
     outputDir: 'test-results',
     screenshotDir: 'test-results/screenshots',
-    reportPrefix: 'auth-test-report',
+    reportPrefix: 'e2e-test-report',
     embedImages: true,
+    useFixedFileName: true,   // 固定ファイル名（上書き）
+    persistResults: true,     // 結果をJSONに保存・読み込み
 })
 
 /**
