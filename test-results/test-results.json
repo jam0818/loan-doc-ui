@@ -1,0 +1,56 @@
+[
+  {
+    "id": "1.1",
+    "category": "認証機能",
+    "name": "ログインページ表示",
+    "description": "ログインページが正しく表示される",
+    "status": "PASS",
+    "screenshotPath": "test-results/screenshots/1.1_login_page.png",
+    "timestamp": "2026-01-19T05:00:51.560Z"
+  },
+  {
+    "id": "1.2",
+    "category": "認証機能",
+    "name": "空フィールド無効",
+    "description": "入力欄が空の場合ログインボタンが無効",
+    "status": "PASS",
+    "screenshotPath": "test-results/screenshots/1.2_empty_fields.png",
+    "timestamp": "2026-01-19T05:00:51.840Z"
+  },
+  {
+    "id": "1.3",
+    "category": "認証機能",
+    "name": "ログイン情報入力",
+    "description": "ユーザー名とパスワードを入力するとボタンが有効",
+    "status": "PASS",
+    "screenshotPath": "test-results/screenshots/1.3_filled_fields.png",
+    "timestamp": "2026-01-19T05:00:52.127Z"
+  },
+  {
+    "id": "1.4",
+    "category": "認証機能",
+    "name": "ログインボタンクリック",
+    "description": "ログインボタンをクリックできる",
+    "status": "PASS",
+    "screenshotPath": "test-results/screenshots/1.4_after_click.png",
+    "timestamp": "2026-01-19T05:00:54.440Z"
+  },
+  {
+    "id": "2.1",
+    "category": "UI表示",
+    "name": "タイトル表示",
+    "description": "アプリケーションタイトルが表示される",
+    "status": "FAIL",
+    "screenshotPath": "test-results/screenshots/2.1_title.png",
+    "timestamp": "2026-01-19T05:00:54.673Z"
+  },
+  {
+    "id": "2.2",
+    "category": "UI表示",
+    "name": "入力フォーム表示",
+    "description": "ユーザー名とパスワードの入力欄が表示される",
+    "status": "FAIL",
+    "screenshotPath": "test-results/screenshots/2.2_form.png",
+    "timestamp": "2026-01-19T05:00:54.923Z"
+  }
+]

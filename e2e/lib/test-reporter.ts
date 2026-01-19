@@ -66,6 +66,20 @@ export interface ReporterOptions {
     imageSize?: { width: number; height: number }
     /** 行の高さ（画像埋め込み時）*/
     rowHeight?: number
+    /**
+     * 固定ファイル名を使用するか（デフォルト: false）
+     * trueの場合、タイムスタンプなしの固定名で保存（上書き）
+     */
+    useFixedFileName?: boolean
+    /**
+     * 結果をJSONファイルに保存するか（デフォルト: false）
+     * trueの場合、結果をJSONに保存し、次回実行時に読み込んで統合
+     */
+    persistResults?: boolean
+    /**
+     * 結果保存用JSONファイルのパス
+     */
+    resultsFilePath?: string
 }
 
 /**
@@ -124,15 +138,24 @@ export class TestReporter {
     private styles: StyleConfig = DEFAULT_STYLES
 
     constructor(options: ReporterOptions = {}) {
+        const outputDir = options.outputDir ?? 'test-results'
         this.options = {
-            outputDir: options.outputDir ?? 'test-results',
+            outputDir,
             screenshotDir: options.screenshotDir ?? 'test-results/screenshots',
             reportPrefix: options.reportPrefix ?? 'test-report',
             embedImages: options.embedImages ?? true,
             imageSize: options.imageSize ?? { width: 400, height: 180 },
             rowHeight: options.rowHeight ?? 150,
+            useFixedFileName: options.useFixedFileName ?? false,
+            persistResults: options.persistResults ?? false,
+            resultsFilePath: options.resultsFilePath ?? path.join(outputDir, 'test-results.json'),
         }
         this.initDirs()
+
+        // 永続化が有効な場合、既存の結果を読み込む
+        if (this.options.persistResults) {
+            this.loadResults()
+        }
     }
 
     /**
@@ -145,6 +168,47 @@ export class TestReporter {
         if (!fs.existsSync(this.options.screenshotDir)) {
             fs.mkdirSync(this.options.screenshotDir, { recursive: true })
         }
+    }
+
+    /**
+     * 保存済み結果を読み込む
+     */
+    private loadResults(): void {
+        if (fs.existsSync(this.options.resultsFilePath)) {
+            try {
+                const data = fs.readFileSync(this.options.resultsFilePath, 'utf-8')
+                const parsed = JSON.parse(data)
+                if (Array.isArray(parsed)) {
+                    this.results = parsed
+                    console.log(`📂 既存の結果を読み込み: ${parsed.length}件`)
+                }
+            } catch (e) {
+                console.log('⚠️ 結果ファイルの読み込みに失敗、新規作成します')
+            }
+        }
+    }
+
+    /**
+     * 結果をJSONファイルに保存
+     */
+    saveResults(): void {
+        fs.writeFileSync(
+            this.options.resultsFilePath,
+            JSON.stringify(this.results, null, 2),
+            'utf-8'
+        )
+        console.log(`💾 結果を保存: ${this.options.resultsFilePath} (${this.results.length}件)`)
+    }
+
+    /**
+     * 保存済み結果をクリア
+     */
+    clearSavedResults(): void {
+        if (fs.existsSync(this.options.resultsFilePath)) {
+            fs.unlinkSync(this.options.resultsFilePath)
+            console.log('🗑️ 保存済み結果をクリアしました')
+        }
+        this.results = []
     }
 
     /**
@@ -226,10 +290,21 @@ export class TestReporter {
         // サマリーシート作成
         this.createSummarySheet(workbook, categories)
 
-        // ファイル保存
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-        const reportPath = path.join(this.options.outputDir, `${this.options.reportPrefix}_${timestamp}.xlsx`)
+        // ファイル名決定（固定 or タイムスタンプ付き）
+        let reportPath: string
+        if (this.options.useFixedFileName) {
+            reportPath = path.join(this.options.outputDir, `${this.options.reportPrefix}.xlsx`)
+        } else {
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+            reportPath = path.join(this.options.outputDir, `${this.options.reportPrefix}_${timestamp}.xlsx`)
+        }
+
         await workbook.xlsx.writeFile(reportPath)
+
+        // 永続化が有効な場合、結果も保存
+        if (this.options.persistResults) {
+            this.saveResults()
+        }
 
         const summary = this.getSummary()
         console.log(`📁 レポート保存: ${reportPath}`)
