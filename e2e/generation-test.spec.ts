@@ -1,46 +1,22 @@
 /**
  * LLM生成機能テスト
  *
+ * 実API使用、UIログイン形式
  * CHECKLIST.md 4.1-4.14のテストケースを実装
  */
 
-import { test, expect, type Page } from '@playwright/test'
-import { runTest, createReporter } from './lib'
-import { setupApiMocks, resetMockData } from './mocks/api-mock'
+import { test, expect } from '@playwright/test'
+import { runTest, createReporter, loginViaUI } from './lib'
 
 // 共通レポーター
 const reporter = createReporter()
-
-/**
- * テスト前にログイン状態とAPIモックを設定
- */
-async function setupAuthAndMocks(page: Page) {
-    await setupApiMocks(page)
-    await page.addInitScript(() => {
-        localStorage.setItem('auth', JSON.stringify({
-            isAuthenticated: true,
-            user: { id: 1, username: 'admin', role: 'admin' },
-            token: 'mock-token',
-        }))
-    })
-}
-
-/**
- * 3カラム表示まで待機
- */
-async function waitForColumns(page: Page) {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
-    await expect(page.locator('.generate-column')).toBeVisible({ timeout: 10000 })
-}
 
 /**
  * LLM生成テスト
  */
 test.describe('LLM生成テスト', () => {
     test.beforeEach(async ({ page }) => {
-        resetMockData()
-        await setupAuthAndMocks(page)
+        await loginViaUI(page)
     })
 
     test.afterAll(async () => {
@@ -57,7 +33,6 @@ test.describe('LLM生成テスト', () => {
             description: 'ドキュメント未選択時は生成ボタンが無効',
             screenshotStep: 'gen_doc_disabled',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -70,7 +45,6 @@ test.describe('LLM生成テスト', () => {
             description: 'プロンプト未選択時は生成ボタンが無効',
             screenshotStep: 'gen_prompt_disabled',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -83,7 +57,6 @@ test.describe('LLM生成テスト', () => {
             description: 'ドキュメントとプロンプト両方選択で生成ボタン有効',
             screenshotStep: 'gen_enabled',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -98,7 +71,6 @@ test.describe('LLM生成テスト', () => {
             description: '生成前モードが表示される',
             screenshotStep: 'mode_before',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -111,7 +83,6 @@ test.describe('LLM生成テスト', () => {
             description: '生成後モードが表示される',
             screenshotStep: 'mode_after',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -124,7 +95,6 @@ test.describe('LLM生成テスト', () => {
             description: '生成前/後モードを切り替えられる',
             screenshotStep: 'mode_toggle',
         }, async () => {
-            await waitForColumns(page)
             const beforeMode = page.getByRole('button', { name: '生成後' })
             const afterMode = page.getByRole('button', { name: '生成前' })
             await expect(beforeMode.or(afterMode).first()).toBeVisible({ timeout: 10000 })
@@ -141,7 +111,6 @@ test.describe('LLM生成テスト', () => {
             description: '生成ボタンをクリックできる',
             screenshotStep: 'gen_click',
         }, async () => {
-            await waitForColumns(page)
             const genButton = page.getByRole('button', { name: '生成' })
             const playButton = page.locator('.generate-column').getByRole('button').filter({ has: page.locator('.mdi-play') })
             await expect(genButton.or(playButton).first()).toBeVisible({ timeout: 10000 })
@@ -156,7 +125,6 @@ test.describe('LLM生成テスト', () => {
             description: '生成中にローディング表示',
             screenshotStep: 'gen_loading',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -169,7 +137,6 @@ test.describe('LLM生成テスト', () => {
             description: '生成中はボタンが無効',
             screenshotStep: 'gen_btn_disabled',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -182,7 +149,6 @@ test.describe('LLM生成テスト', () => {
             description: '生成成功後、生成後モードに切替',
             screenshotStep: 'gen_success',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -195,7 +161,6 @@ test.describe('LLM生成テスト', () => {
             description: '生成エラー時にエラーメッセージ表示',
             screenshotStep: 'gen_error',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -210,7 +175,6 @@ test.describe('LLM生成テスト', () => {
             description: '修正モードで個別再生成ボタン表示',
             screenshotStep: 'regen_btn',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -223,7 +187,6 @@ test.describe('LLM生成テスト', () => {
             description: '個別フィールドを再生成できる',
             screenshotStep: 'regen_field',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
@@ -238,7 +201,6 @@ test.describe('LLM生成テスト', () => {
             description: '生成後コンテンツを編集できる',
             screenshotStep: 'edit_result',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.generate-column')).toBeVisible()
         })
     })

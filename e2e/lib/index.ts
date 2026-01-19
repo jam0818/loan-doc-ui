@@ -8,11 +8,9 @@ export { TestReporter, getReporter, resetReporter } from './test-reporter'
 export type { TestResult, ReporterOptions } from './test-reporter'
 export {
     runTest,
-    runTestSoft,
     createReporter,
-    fillVuetifyField,
-    clickVuetifyButton,
-    selectVuetifyItem
+    loginViaUI,
+    goToMainPageLoggedIn,
+    TEST_USER,
 } from './test-helpers'
 export type { TestConfig } from './test-helpers'
-

@@ -1,39 +1,20 @@
 /**
  * 結合テスト
  *
+ * 実API使用、UIログイン形式
  * CHECKLIST.md 5.1-5.12のテストケースを実装
  */
 
-import { test, expect, type Page } from '@playwright/test'
-import { runTest, createReporter } from './lib'
-import { setupApiMocks, resetMockData } from './mocks/api-mock'
+import { test, expect } from '@playwright/test'
+import { runTest, createReporter, loginViaUI } from './lib'
 
 // 共通レポーター
 const reporter = createReporter()
 
 /**
- * テスト前にログイン状態とAPIモックを設定
- */
-async function setupAuthAndMocks(page: Page) {
-    await setupApiMocks(page)
-    await page.addInitScript(() => {
-        localStorage.setItem('auth', JSON.stringify({
-            isAuthenticated: true,
-            user: { id: 1, username: 'admin', role: 'admin' },
-            token: 'mock-token',
-        }))
-    })
-}
-
-/**
  * 結合テスト
  */
 test.describe('結合テスト', () => {
-    test.beforeEach(async ({ page }) => {
-        resetMockData()
-        await setupAuthAndMocks(page)
-    })
-
     test.afterAll(async () => {
         await reporter.generateReport()
     })
@@ -48,8 +29,7 @@ test.describe('結合テスト', () => {
             description: 'ログイン→ドキュメント→プロンプト→生成の一連フロー',
             screenshotStep: 'workflow',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             // 3カラムが表示される
             await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
             await expect(page.locator('.prompt-column')).toBeVisible()
@@ -67,11 +47,13 @@ test.describe('結合テスト', () => {
             description: 'ログアウト後に再ログインできる',
             screenshotStep: 'relogin',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await page.locator('.mdi-logout').click()
             await page.waitForTimeout(1000)
             await expect(page).toHaveURL(/\/login/)
+            // 再ログイン
+            await loginViaUI(page)
+            await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
         })
     })
 
@@ -83,8 +65,7 @@ test.describe('結合テスト', () => {
             description: 'ページリロード後も状態が維持される',
             screenshotStep: 'reload_state',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
             await page.reload()
             await page.waitForLoadState('networkidle')
@@ -102,8 +83,7 @@ test.describe('結合テスト', () => {
             description: 'ドキュメント選択によりプロンプト操作が有効になる',
             screenshotStep: 'doc_prompt_link',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await page.getByRole('combobox', { name: '文書を選択' }).click()
             await page.waitForTimeout(500)
             const firstItem = page.getByRole('listbox').locator('.v-list-item').first()
@@ -121,8 +101,7 @@ test.describe('結合テスト', () => {
             description: 'ドキュメント切替時にプロンプト選択がリセット',
             screenshotStep: 'doc_change_reset',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
         })
     })
@@ -135,8 +114,7 @@ test.describe('結合テスト', () => {
             description: 'プロンプト選択により生成ボタンが有効になる',
             screenshotStep: 'prompt_gen_link',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await expect(page.locator('.generate-column')).toBeVisible({ timeout: 10000 })
         })
     })
@@ -149,8 +127,7 @@ test.describe('結合テスト', () => {
             description: 'プロンプトモード変更が生成カラムに連動',
             screenshotStep: 'mode_sync',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await expect(page.locator('.generate-column')).toBeVisible({ timeout: 10000 })
         })
     })
@@ -165,8 +142,7 @@ test.describe('結合テスト', () => {
             description: 'ドキュメント・プロンプト・生成の3カラム表示',
             screenshotStep: 'layout',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
             await expect(page.locator('.prompt-column')).toBeVisible()
             await expect(page.locator('.generate-column')).toBeVisible()
@@ -183,8 +159,7 @@ test.describe('結合テスト', () => {
             description: 'APIエラー時にエラーメッセージ表示',
             screenshotStep: 'api_error',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
         })
     })
@@ -197,8 +172,7 @@ test.describe('結合テスト', () => {
             description: 'ネットワークエラー時の処理',
             screenshotStep: 'network_error',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
         })
     })
@@ -211,8 +185,7 @@ test.describe('結合テスト', () => {
             description: 'タイムアウト時の処理',
             screenshotStep: 'timeout',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
         })
     })
@@ -225,8 +198,7 @@ test.describe('結合テスト', () => {
             description: '無効な認証トークン時の処理',
             screenshotStep: 'auth_error',
         }, async () => {
-            await page.goto('/')
-            await page.waitForLoadState('networkidle')
+            await loginViaUI(page)
             await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
         })
     })

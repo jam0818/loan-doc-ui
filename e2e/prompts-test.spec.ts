@@ -1,46 +1,22 @@
 /**
  * プロンプトCRUDテスト
  *
+ * 実API使用、UIログイン形式
  * CHECKLIST.md 3.1-3.18のテストケースを実装
  */
 
-import { test, expect, type Page } from '@playwright/test'
-import { runTest, createReporter } from './lib'
-import { setupApiMocks, resetMockData } from './mocks/api-mock'
+import { test, expect } from '@playwright/test'
+import { runTest, createReporter, loginViaUI } from './lib'
 
 // 共通レポーター
 const reporter = createReporter()
-
-/**
- * テスト前にログイン状態とAPIモックを設定
- */
-async function setupAuthAndMocks(page: Page) {
-    await setupApiMocks(page)
-    await page.addInitScript(() => {
-        localStorage.setItem('auth', JSON.stringify({
-            isAuthenticated: true,
-            user: { id: 1, username: 'admin', role: 'admin' },
-            token: 'mock-token',
-        }))
-    })
-}
-
-/**
- * 3カラム表示まで待機
- */
-async function waitForColumns(page: Page) {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
-    await expect(page.locator('.prompt-column')).toBeVisible({ timeout: 10000 })
-}
 
 /**
  * プロンプト管理テスト
  */
 test.describe('プロンプト管理テスト', () => {
     test.beforeEach(async ({ page }) => {
-        resetMockData()
-        await setupAuthAndMocks(page)
+        await loginViaUI(page)
     })
 
     test.afterAll(async () => {
@@ -57,8 +33,6 @@ test.describe('プロンプト管理テスト', () => {
             description: 'ドキュメント未選択時はプロンプト操作が制限される',
             screenshotStep: 'prompt_disabled',
         }, async () => {
-            await waitForColumns(page)
-            // プロンプトカラムが表示される
             await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
@@ -73,7 +47,6 @@ test.describe('プロンプト管理テスト', () => {
             description: 'プロンプト一覧がドロップダウンに表示される',
             screenshotStep: 'prompt_list',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.getByRole('combobox', { name: 'プロンプトを選択' })).toBeVisible({ timeout: 10000 })
         })
     })
@@ -86,7 +59,6 @@ test.describe('プロンプト管理テスト', () => {
             description: 'プロンプト未選択時にガイダンスが表示される',
             screenshotStep: 'prompt_empty',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.getByText('プロンプトを選択してください')).toBeVisible({ timeout: 10000 })
         })
     })
@@ -101,7 +73,6 @@ test.describe('プロンプト管理テスト', () => {
             description: 'ドロップダウンからプロンプトを選択できる',
             screenshotStep: 'prompt_select',
         }, async () => {
-            await waitForColumns(page)
             await page.getByRole('combobox', { name: 'プロンプトを選択' }).click()
             await page.waitForTimeout(500)
         })
@@ -115,7 +86,6 @@ test.describe('プロンプト管理テスト', () => {
             description: 'プロンプト選択後に編集エリアが表示される',
             screenshotStep: 'prompt_edit_area',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
@@ -130,7 +100,6 @@ test.describe('プロンプト管理テスト', () => {
             description: '生成用モードがデフォルトで表示される',
             screenshotStep: 'mode_generate',
         }, async () => {
-            await waitForColumns(page)
             const genMode = page.getByRole('button', { name: '生成用' })
             const modeLabel = page.getByText('生成用')
             await expect(genMode.or(modeLabel).first()).toBeVisible({ timeout: 10000 })
@@ -145,7 +114,6 @@ test.describe('プロンプト管理テスト', () => {
             description: '修正用モードに切り替えられる',
             screenshotStep: 'mode_revise',
         }, async () => {
-            await waitForColumns(page)
             const revMode = page.getByRole('button', { name: '修正用' })
             if (await revMode.isVisible()) {
                 await revMode.click()
@@ -161,8 +129,6 @@ test.describe('プロンプト管理テスト', () => {
             description: '修正用モードで個別再生成ボタンが表示される',
             screenshotStep: 'regen_button',
         }, async () => {
-            await waitForColumns(page)
-            // 修正用モードに切替
             const revMode = page.getByRole('button', { name: '修正用' })
             if (await revMode.isVisible()) {
                 await revMode.click()
@@ -181,7 +147,6 @@ test.describe('プロンプト管理テスト', () => {
             description: '全フィールド共通タイプのプロンプト表示',
             screenshotStep: 'type_all',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
@@ -194,7 +159,6 @@ test.describe('プロンプト管理テスト', () => {
             description: '個別フィールドタイプのプロンプト表示',
             screenshotStep: 'type_each',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
@@ -207,7 +171,6 @@ test.describe('プロンプト管理テスト', () => {
             description: 'パネルを折りたたみ/展開できる',
             screenshotStep: 'panel_toggle',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
@@ -220,7 +183,6 @@ test.describe('プロンプト管理テスト', () => {
             description: '初期状態で全パネルが展開される',
             screenshotStep: 'panel_expanded',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
@@ -233,7 +195,6 @@ test.describe('プロンプト管理テスト', () => {
             description: 'プロンプト設定済みの場合チップ表示',
             screenshotStep: 'chip_display',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
@@ -248,7 +209,6 @@ test.describe('プロンプト管理テスト', () => {
             description: '+ボタンで作成ダイアログが開く',
             screenshotStep: 'prompt_create_dialog',
         }, async () => {
-            await waitForColumns(page)
             await page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-plus') }).click()
             await page.waitForTimeout(500)
             await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
@@ -263,7 +223,6 @@ test.describe('プロンプト管理テスト', () => {
             description: 'プロンプトタイプを選択して作成',
             screenshotStep: 'prompt_create_success',
         }, async () => {
-            await waitForColumns(page)
             await page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-plus') }).click()
             await page.waitForTimeout(500)
         })
@@ -279,7 +238,6 @@ test.describe('プロンプト管理テスト', () => {
             description: 'プロンプト内容を編集できる',
             screenshotStep: 'prompt_edit',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
@@ -294,7 +252,6 @@ test.describe('プロンプト管理テスト', () => {
             description: '削除ボタンで確認ダイアログ表示',
             screenshotStep: 'prompt_delete_confirm',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
@@ -307,7 +264,6 @@ test.describe('プロンプト管理テスト', () => {
             description: '削除確認でキャンセルできる',
             screenshotStep: 'prompt_delete_cancel',
         }, async () => {
-            await waitForColumns(page)
             await expect(page.locator('.prompt-column')).toBeVisible()
         })
     })
