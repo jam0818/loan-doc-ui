@@ -1,7 +1,7 @@
 /**
  * ドキュメントCRUDテスト
  *
- * 共通ライブラリのrunTestヘルパーとVuetifyヘルパーを使用
+ * 共通ライブラリのrunTestヘルパーとgetByRoleを使用
  */
 
 import { test, expect, type Page } from '@playwright/test'
@@ -51,7 +51,7 @@ test.describe('ドキュメント管理テスト', () => {
             // ドキュメントカラムが表示される
             await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
             // タイトル「ドキュメント」が表示される
-            await expect(page.locator('.column-title:text-is("ドキュメント")')).toBeVisible()
+            await expect(page.getByText('ドキュメント').first()).toBeVisible()
         })
     })
 
@@ -65,10 +65,8 @@ test.describe('ドキュメント管理テスト', () => {
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // ドロップダウンが表示される
-            await expect(page.locator('.document-column .v-select')).toBeVisible({ timeout: 10000 })
-            // ラベル「文書を選択」が表示される
-            await expect(page.locator('.document-column .v-select .v-label')).toContainText('文書を選択')
+            // ドロップダウン（combobox）が表示される
+            await expect(page.getByRole('combobox', { name: '文書を選択' })).toBeVisible({ timeout: 10000 })
         })
     })
 
@@ -83,8 +81,7 @@ test.describe('ドキュメント管理テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // 未選択時のメッセージ
-            await expect(page.locator('.v-empty-state')).toBeVisible({ timeout: 10000 })
-            await expect(page.locator('text=文書を選択してください')).toBeVisible()
+            await expect(page.getByText('文書を選択してください')).toBeVisible({ timeout: 10000 })
         })
     })
 
@@ -99,7 +96,7 @@ test.describe('ドキュメント管理テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // +ボタンが表示される
-            await expect(page.locator('.document-column .v-btn:has(.mdi-plus)')).toBeVisible({ timeout: 10000 })
+            await expect(page.locator('.document-column').getByRole('button').filter({ has: page.locator('.mdi-plus') })).toBeVisible({ timeout: 10000 })
         })
     })
 
@@ -114,11 +111,11 @@ test.describe('ドキュメント管理テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // +ボタンをクリック
-            await page.click('.document-column .v-btn:has(.mdi-plus)')
+            await page.locator('.document-column').getByRole('button').filter({ has: page.locator('.mdi-plus') }).click()
             await page.waitForTimeout(500)
             // ダイアログが開く
-            await expect(page.locator('.v-dialog')).toBeVisible({ timeout: 5000 })
-            await expect(page.locator('.v-card-title:has-text("新規文書作成")')).toBeVisible()
+            await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 })
+            await expect(page.getByText('新規文書作成')).toBeVisible()
         })
     })
 
@@ -133,7 +130,8 @@ test.describe('ドキュメント管理テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // 編集ボタンが無効
-            await expect(page.locator('.document-column .v-btn:has(.mdi-pencil)')).toBeDisabled()
+            const editBtn = page.locator('.document-column').getByRole('button').filter({ has: page.locator('.mdi-pencil') })
+            await expect(editBtn).toBeDisabled()
         })
     })
 
@@ -148,7 +146,8 @@ test.describe('ドキュメント管理テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // 削除ボタンが無効
-            await expect(page.locator('.document-column .v-btn:has(.mdi-delete)')).toBeDisabled()
+            const deleteBtn = page.locator('.document-column').getByRole('button').filter({ has: page.locator('.mdi-delete') })
+            await expect(deleteBtn).toBeDisabled()
         })
     })
 
@@ -163,10 +162,10 @@ test.describe('ドキュメント管理テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // ドロップダウンをクリック
-            await page.click('.document-column .v-select')
+            await page.getByRole('combobox', { name: '文書を選択' }).click()
             await page.waitForTimeout(500)
-            // メニューが表示される
-            await expect(page.locator('.v-menu')).toBeVisible({ timeout: 5000 })
+            // メニュー（listbox）が表示される
+            await expect(page.getByRole('listbox')).toBeVisible({ timeout: 5000 })
         })
     })
 })

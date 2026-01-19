@@ -1,11 +1,11 @@
 /**
  * 認証機能テスト
  *
- * 共通ライブラリのrunTestヘルパーとVuetifyヘルパーを使用
+ * 共通ライブラリのrunTestヘルパーとgetByRoleを使用
  */
 
 import { test, expect } from '@playwright/test'
-import { runTest, createReporter, fillVuetifyField } from './lib'
+import { runTest, createReporter } from './lib'
 
 // 共通レポーター
 const reporter = createReporter()
@@ -28,13 +28,13 @@ test.describe('認証機能テスト', () => {
         }, async () => {
             await page.goto('/login')
             // タイトル確認
-            await expect(page.locator('h1:has-text("文書生成アプリケーション")')).toBeVisible({ timeout: 10000 })
+            await expect(page.getByRole('heading', { name: '文書生成アプリケーション' })).toBeVisible({ timeout: 10000 })
             // ユーザー名フィールド確認
-            await expect(page.locator('.v-text-field:has(.v-label:text-is("ユーザー名"))')).toBeVisible()
+            await expect(page.getByLabel('ユーザー名')).toBeVisible()
             // パスワードフィールド確認
-            await expect(page.locator('.v-text-field:has(.v-label:text-is("パスワード"))')).toBeVisible()
+            await expect(page.getByLabel('パスワード')).toBeVisible()
             // ログインボタン確認
-            await expect(page.locator('.v-btn:has-text("ログイン")')).toBeVisible()
+            await expect(page.getByRole('button', { name: 'ログイン' })).toBeVisible()
         })
     })
 
@@ -63,8 +63,7 @@ test.describe('認証機能テスト', () => {
             await page.goto('/login')
             await page.waitForLoadState('networkidle')
             // ログインボタンが無効であることを確認
-            const loginButton = page.locator('.v-btn:has-text("ログイン")')
-            await expect(loginButton).toBeDisabled()
+            await expect(page.getByRole('button', { name: 'ログイン' })).toBeDisabled()
         })
     })
 
@@ -79,10 +78,9 @@ test.describe('認証機能テスト', () => {
             await page.goto('/login')
             await page.waitForLoadState('networkidle')
             // ユーザー名のみ入力
-            await fillVuetifyField(page, 'ユーザー名', 'admin')
+            await page.getByLabel('ユーザー名').fill('admin')
             // ボタンは無効のまま
-            const loginButton = page.locator('.v-btn:has-text("ログイン")')
-            await expect(loginButton).toBeDisabled()
+            await expect(page.getByRole('button', { name: 'ログイン' })).toBeDisabled()
         })
     })
 
@@ -97,10 +95,9 @@ test.describe('認証機能テスト', () => {
             await page.goto('/login')
             await page.waitForLoadState('networkidle')
             // パスワードのみ入力
-            await fillVuetifyField(page, 'パスワード', 'password')
+            await page.getByLabel('パスワード').fill('password')
             // ボタンは無効のまま
-            const loginButton = page.locator('.v-btn:has-text("ログイン")')
-            await expect(loginButton).toBeDisabled()
+            await expect(page.getByRole('button', { name: 'ログイン' })).toBeDisabled()
         })
     })
 
@@ -115,11 +112,10 @@ test.describe('認証機能テスト', () => {
             await page.goto('/login')
             await page.waitForLoadState('networkidle')
             // 両方入力
-            await fillVuetifyField(page, 'ユーザー名', 'admin')
-            await fillVuetifyField(page, 'パスワード', 'password')
+            await page.getByLabel('ユーザー名').fill('admin')
+            await page.getByLabel('パスワード').fill('password')
             // ボタンが有効になる
-            const loginButton = page.locator('.v-btn:has-text("ログイン")')
-            await expect(loginButton).toBeEnabled()
+            await expect(page.getByRole('button', { name: 'ログイン' })).toBeEnabled()
         })
     })
 
@@ -133,9 +129,9 @@ test.describe('認証機能テスト', () => {
         }, async () => {
             await page.goto('/login')
             await page.waitForLoadState('networkidle')
-            await fillVuetifyField(page, 'ユーザー名', 'admin')
-            await fillVuetifyField(page, 'パスワード', 'password')
-            await page.click('.v-btn:has-text("ログイン")')
+            await page.getByLabel('ユーザー名').fill('admin')
+            await page.getByLabel('パスワード').fill('password')
+            await page.getByRole('button', { name: 'ログイン' }).click()
             await page.waitForTimeout(2000)
             // クリック後の状態を確認（APIモックなしのためエラーまたはURLの変化）
         })
@@ -152,12 +148,12 @@ test.describe('認証機能テスト', () => {
             await page.goto('/login')
             await page.waitForLoadState('networkidle')
             // パスワードを入力
-            await fillVuetifyField(page, 'パスワード', 'testpassword')
+            const passwordField = page.getByLabel('パスワード')
+            await passwordField.fill('testpassword')
             // 最初はtypeがpassword
-            const passwordField = page.locator('.v-text-field:has(.v-label:text-is("パスワード")) input')
             await expect(passwordField).toHaveAttribute('type', 'password')
-            // 目アイコンをクリック
-            await page.click('.v-text-field:has(.v-label:text-is("パスワード")) .v-input__append i')
+            // 目アイコンをクリック（Vuetifyのappend-inner-icon）
+            await page.locator('.v-field__append-inner .mdi-eye').click()
             // typeがtextに変わる
             await expect(passwordField).toHaveAttribute('type', 'text')
         })

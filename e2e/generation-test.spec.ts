@@ -1,7 +1,7 @@
 /**
  * LLM生成テスト
  *
- * 共通ライブラリのrunTestヘルパーとVuetifyヘルパーを使用
+ * 共通ライブラリのrunTestヘルパーとgetByRoleを使用
  */
 
 import { test, expect, type Page } from '@playwright/test'
@@ -64,7 +64,7 @@ test.describe('LLM生成テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // タイトル「生成」が表示される
-            await expect(page.locator('.generate-column .column-title')).toContainText('生成')
+            await expect(page.getByText('生成').first()).toBeVisible({ timeout: 10000 })
         })
     })
 
@@ -78,9 +78,9 @@ test.describe('LLM生成テスト', () => {
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // 生成ボタンまたは生成関連のボタンが表示される
-            const genButton = page.locator('.generate-column .v-btn:has-text("生成")')
-            const playButton = page.locator('.generate-column .v-btn:has(.mdi-play)')
+            // 生成ボタンまたは再生ボタンが表示される
+            const genButton = page.getByRole('button', { name: '生成' })
+            const playButton = page.locator('.generate-column').getByRole('button').filter({ has: page.locator('.mdi-play') })
             await expect(genButton.or(playButton).first()).toBeVisible({ timeout: 10000 })
         })
     })
@@ -95,10 +95,10 @@ test.describe('LLM生成テスト', () => {
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // 未選択時のガイダンス（文書またはプロンプトを選択してください等）
-            const guidance = page.locator('.generate-column .v-empty-state')
-            const message = page.locator('.generate-column:has-text("選択してください")')
-            await expect(guidance.or(message).first()).toBeVisible({ timeout: 10000 })
+            // 未選択時のガイダンス
+            const selectDoc = page.getByText('文書を選択してください')
+            const selectPrompt = page.getByText('プロンプトを選択してください')
+            await expect(selectDoc.or(selectPrompt).first()).toBeVisible({ timeout: 10000 })
         })
     })
 

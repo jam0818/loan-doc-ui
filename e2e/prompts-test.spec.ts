@@ -1,7 +1,7 @@
 /**
  * プロンプトCRUDテスト
  *
- * 共通ライブラリのrunTestヘルパーとVuetifyヘルパーを使用
+ * 共通ライブラリのrunTestヘルパーとgetByRoleを使用
  */
 
 import { test, expect, type Page } from '@playwright/test'
@@ -51,7 +51,7 @@ test.describe('プロンプト管理テスト', () => {
             // プロンプトカラムが表示される
             await expect(page.locator('.prompt-column')).toBeVisible({ timeout: 10000 })
             // タイトル「プロンプト」が表示される
-            await expect(page.locator('.prompt-column .column-title')).toContainText('プロンプト')
+            await expect(page.getByText('プロンプト').first()).toBeVisible()
         })
     })
 
@@ -65,8 +65,8 @@ test.describe('プロンプト管理テスト', () => {
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // ドロップダウンが表示される
-            await expect(page.locator('.prompt-column .v-select')).toBeVisible({ timeout: 10000 })
+            // ドロップダウン（combobox）が表示される
+            await expect(page.getByRole('combobox', { name: 'プロンプトを選択' })).toBeVisible({ timeout: 10000 })
         })
     })
 
@@ -81,9 +81,7 @@ test.describe('プロンプト管理テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // 未選択時のメッセージまたはガイダンス
-            const emptyState = page.locator('.prompt-column .v-empty-state')
-            const guidance = page.locator('.prompt-column:has-text("プロンプトを選択")')
-            await expect(emptyState.or(guidance).first()).toBeVisible({ timeout: 10000 })
+            await expect(page.getByText('プロンプトを選択してください')).toBeVisible({ timeout: 10000 })
         })
     })
 
@@ -98,7 +96,7 @@ test.describe('プロンプト管理テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // +ボタンが表示される
-            await expect(page.locator('.prompt-column .v-btn:has(.mdi-plus)')).toBeVisible({ timeout: 10000 })
+            await expect(page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-plus') })).toBeVisible({ timeout: 10000 })
         })
     })
 
@@ -113,7 +111,8 @@ test.describe('プロンプト管理テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // 編集ボタンが無効
-            await expect(page.locator('.prompt-column .v-btn:has(.mdi-pencil)')).toBeDisabled()
+            const editBtn = page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-pencil') })
+            await expect(editBtn).toBeDisabled()
         })
     })
 
@@ -128,11 +127,12 @@ test.describe('プロンプト管理テスト', () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
             // 削除ボタンが無効
-            await expect(page.locator('.prompt-column .v-btn:has(.mdi-delete)')).toBeDisabled()
+            const deleteBtn = page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-delete') })
+            await expect(deleteBtn).toBeDisabled()
         })
     })
 
-    // 3.7 モード切替ボタン
+    // 3.7 モード切替表示
     test('3.7 モード切替表示', async ({ page }) => {
         await runTest(reporter, page, {
             id: '3.7',
@@ -142,10 +142,10 @@ test.describe('プロンプト管理テスト', () => {
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // モード切替エリアが表示される（btn-toggleまたはセグメントボタン）
-            const modeToggle = page.locator('.prompt-column .v-btn-toggle')
-            const modeButtons = page.locator('.prompt-column:has-text("生成用")')
-            await expect(modeToggle.or(modeButtons).first()).toBeVisible({ timeout: 10000 })
+            // モード切替ボタンが表示される（生成用/修正用）
+            const genMode = page.getByRole('button', { name: '生成用' })
+            const revMode = page.getByRole('button', { name: '修正用' })
+            await expect(genMode.or(revMode).first()).toBeVisible({ timeout: 10000 })
         })
     })
 })
