@@ -24,7 +24,7 @@
  * ```
  */
 
-import ExcelJS from 'exceljs'
+import * as ExcelJS from 'exceljs'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -271,7 +271,7 @@ export class TestReporter {
      * カテゴリ一覧を取得
      */
     getCategories(): string[] {
-        return [...new Set(this.results.map(r => r.category))]
+        return Array.from(new Set(this.results.map(r => r.category)))
     }
 
     /**
