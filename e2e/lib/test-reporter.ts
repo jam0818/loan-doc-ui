@@ -24,7 +24,8 @@
  * ```
  */
 
-import * as ExcelJS from 'exceljs'
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const ExcelJS = require('exceljs')
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -83,16 +84,10 @@ export interface ReporterOptions {
 }
 
 /**
- * Excel スタイル設定
+ * Excel スタイル設定（型をany化して柔軟に対応）
  */
-interface StyleConfig {
-    headerFill: ExcelJS.FillPattern
-    headerFont: Partial<ExcelJS.Font>
-    passFill: ExcelJS.FillPattern
-    failFill: ExcelJS.FillPattern
-    skipFill: ExcelJS.FillPattern
-    border: Partial<ExcelJS.Borders>
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StyleConfig = Record<string, any>
 
 /**
  * デフォルトのスタイル設定
@@ -345,7 +340,8 @@ export class TestReporter {
     /**
      * カテゴリ別シートを作成
      */
-    private async createCategorySheet(workbook: ExcelJS.Workbook, category: string): Promise<void> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private async createCategorySheet(workbook: any, category: string): Promise<void> {
         const categoryResults = this.results.filter(r => r.category === category)
         const sheetName = category.substring(0, 31) // Excelのシート名制限
 
@@ -412,8 +408,9 @@ export class TestReporter {
         }
 
         // 罫線と配置設定
-        worksheet.eachRow((row) => {
-            row.eachCell((cell) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        worksheet.eachRow((row: any) => {
+            row.eachCell((cell: any) => {
                 cell.border = this.styles.border
                 cell.alignment = { vertical: 'middle', wrapText: true }
             })
@@ -423,7 +420,8 @@ export class TestReporter {
     /**
      * サマリーシートを作成
      */
-    private createSummarySheet(workbook: ExcelJS.Workbook, categories: string[]): void {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private createSummarySheet(workbook: any, categories: string[]): void {
         const summarySheet = workbook.addWorksheet('サマリー')
 
         summarySheet.columns = [
@@ -471,8 +469,9 @@ export class TestReporter {
         totalRow.font = { bold: true }
 
         // 罫線設定
-        summarySheet.eachRow((row) => {
-            row.eachCell((cell) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        summarySheet.eachRow((row: any) => {
+            row.eachCell((cell: any) => {
                 cell.border = this.styles.border
             })
         })
