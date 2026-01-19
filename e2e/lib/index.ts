@@ -10,7 +10,11 @@ export {
     runTest,
     createReporter,
     loginViaUI,
-    goToMainPageLoggedIn,
+    loginAndSetup,
+    createDocumentViaUI,
+    selectDocumentViaUI,
+    deleteDocumentViaUI,
+    createPromptViaUI,
     TEST_USER,
 } from './test-helpers'
 export type { TestConfig } from './test-helpers'
