@@ -212,15 +212,44 @@ export class TestReporter {
     }
 
     /**
-     * テスト結果を追加
+     * テスト結果を追加（永続化時は即座に保存）
      */
     addResult(result: Omit<TestResult, 'timestamp'>): void {
+        // 永続化が有効な場合、最新の結果を読み込む
+        if (this.options.persistResults) {
+            this.loadResults()
+        }
+
         const fullResult: TestResult = {
             ...result,
             timestamp: new Date().toISOString(),
         }
-        this.results.push(fullResult)
+
+        // 同じIDの結果があれば更新、なければ追加
+        const existingIndex = this.results.findIndex(r => r.id === result.id)
+        if (existingIndex >= 0) {
+            this.results[existingIndex] = fullResult
+        } else {
+            this.results.push(fullResult)
+        }
+
         this.logResult(fullResult)
+
+        // 永続化が有効な場合、即座に保存
+        if (this.options.persistResults) {
+            this.saveResultsQuiet()
+        }
+    }
+
+    /**
+     * 結果を静かに保存（ログなし）
+     */
+    private saveResultsQuiet(): void {
+        fs.writeFileSync(
+            this.options.resultsFilePath,
+            JSON.stringify(this.results, null, 2),
+            'utf-8'
+        )
     }
 
     /**
