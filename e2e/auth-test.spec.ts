@@ -35,8 +35,13 @@ async function runTest(
     testFn: () => Promise<void>
 ): Promise<void> {
     // Playwrightのテスト情報から親describe名を取得
+    // titlePath構造: [ファイル名, describe名, テスト名, ...]
     const testInfo = test.info()
-    const category = config.category ?? testInfo.titlePath[0] ?? 'テスト'
+    // describe名があればそれを使用、なければファイル名からフォールバック
+    const category = config.category
+        ?? testInfo.titlePath[1]  // describe名
+        ?? testInfo.titlePath[0]?.replace(/\.spec\.ts$/, '')
+        ?? 'テスト'
 
     let status: 'PASS' | 'FAIL' = 'FAIL'
     let screenshotPath: string | undefined
