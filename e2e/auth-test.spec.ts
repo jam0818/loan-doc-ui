@@ -21,18 +21,23 @@ const reporter = new TestReporter({
  * テスト実行ヘルパー
  *
  * テストロジックを実行し、結果を自動記録
+ * categoryを省略すると、test.describeの名前を使用
  */
 async function runTest(
     page: Page,
     config: {
         id: string
-        category: string
+        category?: string  // 省略時はtest.info()から取得
         name: string
         description: string
         screenshotStep?: string
     },
     testFn: () => Promise<void>
 ): Promise<void> {
+    // Playwrightのテスト情報から親describe名を取得
+    const testInfo = test.info()
+    const category = config.category ?? testInfo.titlePath[0] ?? 'テスト'
+
     let status: 'PASS' | 'FAIL' = 'FAIL'
     let screenshotPath: string | undefined
     let error: string | undefined
@@ -52,7 +57,7 @@ async function runTest(
 
     reporter.addResult({
         id: config.id,
-        category: config.category,
+        category,
         name: config.name,
         description: config.description,
         status,
@@ -74,7 +79,6 @@ test.describe('認証機能テスト', () => {
     test('1.1 ログインページ表示', async ({ page }) => {
         await runTest(page, {
             id: '1.1',
-            category: '認証機能',
             name: 'ログインページ表示',
             description: 'ログインページが正しく表示される',
             screenshotStep: 'login_page',
@@ -87,7 +91,6 @@ test.describe('認証機能テスト', () => {
     test('1.2 空フィールドでボタン無効', async ({ page }) => {
         await runTest(page, {
             id: '1.2',
-            category: '認証機能',
             name: '空フィールド無効',
             description: '入力欄が空の場合ログインボタンが無効',
             screenshotStep: 'empty_fields',
@@ -100,7 +103,6 @@ test.describe('認証機能テスト', () => {
     test('1.3 ログイン情報入力', async ({ page }) => {
         await runTest(page, {
             id: '1.3',
-            category: '認証機能',
             name: 'ログイン情報入力',
             description: 'ユーザー名とパスワードを入力するとボタンが有効',
             screenshotStep: 'filled_fields',
@@ -115,7 +117,6 @@ test.describe('認証機能テスト', () => {
     test('1.4 ログインボタンクリック', async ({ page }) => {
         await runTest(page, {
             id: '1.4',
-            category: '認証機能',
             name: 'ログインボタンクリック',
             description: 'ログインボタンをクリックできる',
             screenshotStep: 'after_click',
