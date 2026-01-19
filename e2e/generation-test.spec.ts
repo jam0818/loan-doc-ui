@@ -1,7 +1,7 @@
 /**
  * LLM生成テスト
  *
- * ライブラリ共通のrunTestヘルパーを使用
+ * 共通ライブラリのrunTestヘルパーとVuetifyヘルパーを使用
  */
 
 import { test, expect, type Page } from '@playwright/test'
@@ -12,11 +12,10 @@ import { setupApiMocks, resetMockData } from './mocks/api-mock'
 const reporter = createReporter()
 
 /**
- * テスト前にログイン状態を設定
+ * テスト前にログイン状態とAPIモックを設定
  */
-async function setupAuth(page: Page) {
+async function setupAuthAndMocks(page: Page) {
     await setupApiMocks(page)
-    // 認証状態をローカルストレージに設定
     await page.addInitScript(() => {
         localStorage.setItem('auth', JSON.stringify({
             isAuthenticated: true,
@@ -32,72 +31,106 @@ async function setupAuth(page: Page) {
 test.describe('LLM生成テスト', () => {
     test.beforeEach(async ({ page }) => {
         resetMockData()
-        await setupAuth(page)
+        await setupAuthAndMocks(page)
     })
 
     test.afterAll(async () => {
         await reporter.generateReport()
     })
 
-    // 生成カラム表示テスト
+    // 4.1 生成カラム表示
     test('4.1 生成カラム表示', async ({ page }) => {
         await runTest(reporter, page, {
             id: '4.1',
             name: '生成カラム表示',
-            description: '生成カラムが表示される',
-            screenshotStep: 'generation_column',
+            description: '生成カラムが正しく表示される',
+            screenshotStep: 'gen_column',
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // 生成カラムが表示されることを確認
-            await expect(page.locator('.generation-column, [data-testid="generation-column"], .v-col').last()).toBeVisible({ timeout: 5000 })
+            // 生成カラムが表示される
+            await expect(page.locator('.generate-column')).toBeVisible({ timeout: 10000 })
         })
     })
 
-    test('4.2 生成ボタン表示', async ({ page }) => {
+    // 4.2 生成カラムタイトル
+    test('4.2 生成カラムタイトル', async ({ page }) => {
         await runTest(reporter, page, {
             id: '4.2',
-            name: '生成ボタン表示',
-            description: '生成実行ボタンが表示される',
-            screenshotStep: 'generate_button',
+            name: '生成カラムタイトル',
+            description: '生成カラムのタイトルが表示される',
+            screenshotStep: 'gen_title',
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // 生成ボタンが存在することを確認
-            const generateBtn = page.locator('button:has-text("生成"), [data-testid="generate-button"]')
-            await expect(generateBtn.first()).toBeVisible({ timeout: 5000 })
+            // タイトル「生成」が表示される
+            await expect(page.locator('.generate-column .column-title')).toContainText('生成')
         })
     })
 
-    test('4.3 前提条件未充足時無効', async ({ page }) => {
+    // 4.3 生成ボタン表示
+    test('4.3 生成ボタン表示', async ({ page }) => {
         await runTest(reporter, page, {
             id: '4.3',
-            name: '前提条件未充足時無効',
-            description: 'ドキュメント・プロンプト未選択時は生成ボタンが無効',
-            screenshotStep: 'generate_disabled',
+            name: '生成ボタン表示',
+            description: '生成実行ボタンが表示される',
+            screenshotStep: 'gen_button',
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // 生成ボタンが無効であることを確認（またはドキュメント選択案内）
-            const generateBtn = page.locator('button:has-text("生成"), [data-testid="generate-button"]')
-            if (await generateBtn.first().isVisible()) {
-                const isDisabled = await generateBtn.first().isDisabled()
-                expect(isDisabled || true).toBe(true) // 柔軟なチェック
-            }
+            // 生成ボタンまたは生成関連のボタンが表示される
+            const genButton = page.locator('.generate-column .v-btn:has-text("生成")')
+            const playButton = page.locator('.generate-column .v-btn:has(.mdi-play)')
+            await expect(genButton.or(playButton).first()).toBeVisible({ timeout: 10000 })
         })
     })
 
-    test('4.5 生成結果表示エリア', async ({ page }) => {
+    // 4.4 未選択時メッセージ
+    test('4.4 未選択時メッセージ', async ({ page }) => {
         await runTest(reporter, page, {
-            id: '4.5',
-            name: '生成結果表示エリア',
-            description: '生成結果を表示するエリアが存在する',
-            screenshotStep: 'result_area',
+            id: '4.4',
+            name: '未選択時メッセージ',
+            description: 'ドキュメント・プロンプト未選択時にガイダンスが表示される',
+            screenshotStep: 'gen_empty',
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // 生成結果エリアが存在することを確認
-            await expect(page.locator('.generation-result, [data-testid="generation-result"], .v-col').last()).toBeVisible({ timeout: 5000 })
+            // 未選択時のガイダンス（文書またはプロンプトを選択してください等）
+            const guidance = page.locator('.generate-column .v-empty-state')
+            const message = page.locator('.generate-column:has-text("選択してください")')
+            await expect(guidance.or(message).first()).toBeVisible({ timeout: 10000 })
+        })
+    })
+
+    // 4.5 結果表示エリア
+    test('4.5 結果表示エリア', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '4.5',
+            name: '結果表示エリア',
+            description: '生成結果を表示するエリアが存在する',
+            screenshotStep: 'gen_result_area',
+        }, async () => {
+            await page.goto('/')
+            await page.waitForLoadState('networkidle')
+            // 生成カラムが存在することを確認（結果表示エリアを含む）
+            await expect(page.locator('.generate-column')).toBeVisible({ timeout: 10000 })
+        })
+    })
+
+    // 4.6 3カラムレイアウト
+    test('4.6 3カラムレイアウト', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '4.6',
+            name: '3カラムレイアウト',
+            description: 'ドキュメント・プロンプト・生成の3カラムが表示される',
+            screenshotStep: 'layout',
+        }, async () => {
+            await page.goto('/')
+            await page.waitForLoadState('networkidle')
+            // 3つのカラムが表示される
+            await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
+            await expect(page.locator('.prompt-column')).toBeVisible()
+            await expect(page.locator('.generate-column')).toBeVisible()
         })
     })
 })

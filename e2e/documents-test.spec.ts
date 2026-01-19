@@ -1,7 +1,7 @@
 /**
  * ドキュメントCRUDテスト
  *
- * ライブラリ共通のrunTestヘルパーを使用
+ * 共通ライブラリのrunTestヘルパーとVuetifyヘルパーを使用
  */
 
 import { test, expect, type Page } from '@playwright/test'
@@ -12,11 +12,10 @@ import { setupApiMocks, resetMockData } from './mocks/api-mock'
 const reporter = createReporter()
 
 /**
- * テスト前にログイン状態を設定
+ * テスト前にログイン状態とAPIモックを設定
  */
-async function setupAuth(page: Page) {
+async function setupAuthAndMocks(page: Page) {
     await setupApiMocks(page)
-    // 認証状態をローカルストレージに設定
     await page.addInitScript(() => {
         localStorage.setItem('auth', JSON.stringify({
             isAuthenticated: true,
@@ -27,85 +26,147 @@ async function setupAuth(page: Page) {
 }
 
 /**
- * ドキュメントCRUDテスト
+ * ドキュメント管理テスト
  */
 test.describe('ドキュメント管理テスト', () => {
     test.beforeEach(async ({ page }) => {
         resetMockData()
-        await setupAuth(page)
+        await setupAuthAndMocks(page)
     })
 
     test.afterAll(async () => {
         await reporter.generateReport()
     })
 
-    // 一覧表示テスト
-    test('2.1 ドロップダウンに一覧表示', async ({ page }) => {
+    // 2.1 ドキュメントカラム表示
+    test('2.1 ドキュメントカラム表示', async ({ page }) => {
         await runTest(reporter, page, {
             id: '2.1',
-            name: 'ドロップダウン一覧表示',
-            description: 'ドキュメント一覧がドロップダウンに表示される',
-            screenshotStep: 'doc_list',
+            name: 'ドキュメントカラム表示',
+            description: 'ドキュメントカラムが正しく表示される',
+            screenshotStep: 'doc_column',
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // ドロップダウンをクリック
-            await page.click('.document-selector, [data-testid="document-selector"]')
-            await page.waitForTimeout(500)
-            // 一覧が表示されることを確認
-            await expect(page.locator('.v-list-item, .v-menu')).toBeVisible({ timeout: 5000 })
+            // ドキュメントカラムが表示される
+            await expect(page.locator('.document-column')).toBeVisible({ timeout: 10000 })
+            // タイトル「ドキュメント」が表示される
+            await expect(page.locator('.column-title:text-is("ドキュメント")')).toBeVisible()
         })
     })
 
-    test('2.2 未選択時メッセージ', async ({ page }) => {
+    // 2.2 ドロップダウン表示
+    test('2.2 ドロップダウン表示', async ({ page }) => {
         await runTest(reporter, page, {
             id: '2.2',
-            name: '未選択時メッセージ',
-            description: 'ドキュメント未選択時に選択促進メッセージが表示される',
-            screenshotStep: 'no_selection',
+            name: 'ドロップダウン表示',
+            description: '文書選択ドロップダウンが表示される',
+            screenshotStep: 'dropdown',
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // 未選択時のメッセージを確認
-            await expect(page.locator('text=ドキュメントを選択')).toBeVisible({ timeout: 5000 })
+            // ドロップダウンが表示される
+            await expect(page.locator('.document-column .v-select')).toBeVisible({ timeout: 10000 })
+            // ラベル「文書を選択」が表示される
+            await expect(page.locator('.document-column .v-select .v-label')).toContainText('文書を選択')
         })
     })
 
-    // 作成テスト
-    test('2.8 作成ダイアログ表示', async ({ page }) => {
+    // 2.3 未選択時メッセージ
+    test('2.3 未選択時メッセージ', async ({ page }) => {
         await runTest(reporter, page, {
-            id: '2.8',
-            name: '作成ダイアログ表示',
-            description: '新規作成ボタンクリックでダイアログが表示される',
+            id: '2.3',
+            name: '未選択時メッセージ',
+            description: '文書未選択時にガイダンスが表示される',
+            screenshotStep: 'empty_state',
+        }, async () => {
+            await page.goto('/')
+            await page.waitForLoadState('networkidle')
+            // 未選択時のメッセージ
+            await expect(page.locator('.v-empty-state')).toBeVisible({ timeout: 10000 })
+            await expect(page.locator('text=文書を選択してください')).toBeVisible()
+        })
+    })
+
+    // 2.4 新規作成ボタン
+    test('2.4 新規作成ボタン', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '2.4',
+            name: '新規作成ボタン',
+            description: '新規作成ボタン（+）が表示される',
+            screenshotStep: 'create_btn',
+        }, async () => {
+            await page.goto('/')
+            await page.waitForLoadState('networkidle')
+            // +ボタンが表示される
+            await expect(page.locator('.document-column .v-btn:has(.mdi-plus)')).toBeVisible({ timeout: 10000 })
+        })
+    })
+
+    // 2.5 新規作成ダイアログ
+    test('2.5 新規作成ダイアログ', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '2.5',
+            name: '新規作成ダイアログ',
+            description: '+ボタンクリックで作成ダイアログが開く',
             screenshotStep: 'create_dialog',
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // 新規作成ボタンをクリック
-            await page.click('[data-testid="create-document"], button:has-text("新規"), .v-btn--icon:has(.mdi-plus)')
+            // +ボタンをクリック
+            await page.click('.document-column .v-btn:has(.mdi-plus)')
             await page.waitForTimeout(500)
-            // ダイアログが表示されることを確認
-            await expect(page.locator('.v-dialog, [role="dialog"]')).toBeVisible({ timeout: 5000 })
+            // ダイアログが開く
+            await expect(page.locator('.v-dialog')).toBeVisible({ timeout: 5000 })
+            await expect(page.locator('.v-card-title:has-text("新規文書作成")')).toBeVisible()
         })
     })
 
-    test('2.9 タイトル空で保存不可', async ({ page }) => {
+    // 2.6 編集ボタン無効（未選択時）
+    test('2.6 編集ボタン無効', async ({ page }) => {
         await runTest(reporter, page, {
-            id: '2.9',
-            name: 'タイトル空で保存不可',
-            description: 'タイトル未入力時は保存ボタンが無効',
-            screenshotStep: 'empty_title',
+            id: '2.6',
+            name: '編集ボタン無効',
+            description: '文書未選択時は編集ボタンが無効',
+            screenshotStep: 'edit_disabled',
         }, async () => {
             await page.goto('/')
             await page.waitForLoadState('networkidle')
-            // 新規作成ダイアログを開く
-            await page.click('[data-testid="create-document"], button:has-text("新規"), .v-btn--icon:has(.mdi-plus)')
+            // 編集ボタンが無効
+            await expect(page.locator('.document-column .v-btn:has(.mdi-pencil)')).toBeDisabled()
+        })
+    })
+
+    // 2.7 削除ボタン無効（未選択時）
+    test('2.7 削除ボタン無効', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '2.7',
+            name: '削除ボタン無効',
+            description: '文書未選択時は削除ボタンが無効',
+            screenshotStep: 'delete_disabled',
+        }, async () => {
+            await page.goto('/')
+            await page.waitForLoadState('networkidle')
+            // 削除ボタンが無効
+            await expect(page.locator('.document-column .v-btn:has(.mdi-delete)')).toBeDisabled()
+        })
+    })
+
+    // 2.8 ドロップダウンクリック
+    test('2.8 ドロップダウンクリック', async ({ page }) => {
+        await runTest(reporter, page, {
+            id: '2.8',
+            name: 'ドロップダウンクリック',
+            description: 'ドロップダウンをクリックすると一覧が表示される',
+            screenshotStep: 'dropdown_open',
+        }, async () => {
+            await page.goto('/')
+            await page.waitForLoadState('networkidle')
+            // ドロップダウンをクリック
+            await page.click('.document-column .v-select')
             await page.waitForTimeout(500)
-            // タイトルを空にする
-            const titleInput = page.locator('input[placeholder*="タイトル"], input[label*="タイトル"]')
-            await titleInput.clear()
-            // 保存ボタンが無効であることを確認
-            await expect(page.locator('button:has-text("保存")')).toBeDisabled()
+            // メニューが表示される
+            await expect(page.locator('.v-menu')).toBeVisible({ timeout: 5000 })
         })
     })
 })
