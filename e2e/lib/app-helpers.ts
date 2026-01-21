@@ -53,7 +53,10 @@ export async function logoutViaUI(page: Page): Promise<void> {
 export async function createDocumentViaUI(
     page: Page,
     title: string,
-    fields: { name: string; content: string }[] = []
+    fields: { name: string; content: string }[] = [
+        { name: 'フィールド1', content: 'コンテンツ1' },
+        { name: 'フィールド2', content: 'コンテンツ2' },
+    ]
 ): Promise<void> {
     // +ボタンをクリック
     await page.locator('.document-column').getByRole('button').filter({ has: page.locator('.mdi-plus') }).click()
@@ -143,6 +146,29 @@ export async function createPromptViaUI(page: Page, title: string, type: 'all' |
     } catch {
         // 編集ボタンが無効（未選択）の場合、手動選択
         await selectPromptViaUI(page, title)
+    }
+
+    // デフォルトプロンプトの入力
+    const defaultText = 'できるだけ短い短文を作成して'
+
+    if (type === 'all') {
+        // 全体用: テキストエリアに入力
+        await page.locator('.prompt-column textarea').fill(defaultText)
+    } else {
+        // 個別用: 全てのエキスパンションパネルを開いて入力
+        const panels = page.locator('.prompt-column .v-expansion-panel')
+        const count = await panels.count()
+
+        for (let i = 0; i < count; i++) {
+            const panel = panels.nth(i)
+            // 閉じていれば開く
+            const isClosed = await panel.getAttribute('aria-expanded') !== 'true' // Vuetifyの仕様によるが、タイトルクリックで開く
+            // v-expansion-panel-titleをクリック
+            if (await panel.locator('.v-expansion-panel-title').getAttribute('aria-expanded') === 'false') {
+                await panel.locator('.v-expansion-panel-title').click()
+            }
+            await panel.locator('textarea').fill(defaultText)
+        }
     }
 }
 
