@@ -162,7 +162,6 @@ export async function createPromptViaUI(page: Page, title: string, type: 'all' |
         for (let i = 0; i < count; i++) {
             const panel = panels.nth(i)
             // 閉じていれば開く
-            const isClosed = await panel.getAttribute('aria-expanded') !== 'true' // Vuetifyの仕様によるが、タイトルクリックで開く
             // v-expansion-panel-titleをクリック
             if (await panel.locator('.v-expansion-panel-title').getAttribute('aria-expanded') === 'false') {
                 await panel.locator('.v-expansion-panel-title').click()
