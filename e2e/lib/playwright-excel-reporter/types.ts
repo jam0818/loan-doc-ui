@@ -97,6 +97,8 @@ export interface TestData {
     describe: string
     /** ファイルパス */
     file: string
+    /** 行番号 */
+    line: number
     /** テスト結果 */
     status: 'passed' | 'failed' | 'skipped' | 'timedOut' | 'interrupted'
     /** 実行日時 */

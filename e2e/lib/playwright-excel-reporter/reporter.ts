@@ -112,10 +112,12 @@ class ExcelReporter implements Reporter {
      */
     private sortResults(): void {
         this.rawTestResults.sort((a, b) => {
+            // 1. ファイルパス順
             if (a.file !== b.file) {
                 return a.file.localeCompare(b.file)
             }
-            return 0
+            // 2. 行番号順
+            return a.line - b.line
         })
     }
 
@@ -224,6 +226,7 @@ class ExcelReporter implements Reporter {
             title: test.title,
             describe,
             file: test.location.file,
+            line: test.location.line,
             status: result.status,
             timestamp: new Date().toISOString(),
             duration: result.duration,
