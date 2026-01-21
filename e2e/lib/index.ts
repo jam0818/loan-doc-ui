@@ -9,7 +9,6 @@ export * from './playwright-excel-reporter'
 
 // アプリ固有ヘルパー
 export {
-    TEST_USER,
     loginAndSetup,
     loginViaUI,
     logoutViaUI,
@@ -24,3 +23,6 @@ export {
     runGenerationViaUI,
     updateGenerationResultViaUI,
 } from './app-helpers'
+
+// 設定
+export { testConfig } from '../config'

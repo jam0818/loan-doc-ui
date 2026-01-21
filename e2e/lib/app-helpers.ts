@@ -7,27 +7,21 @@
 
 import { expect, type Page } from '@playwright/test'
 
-/**
- * テスト用認証情報
- */
-export const TEST_USER = {
-    username: 'user1',
-    password: 'pass1',
-}
+import { testConfig } from '../config'
 
 /**
  * UIを使ってログインする
  * 既にログイン済みの場合はスキップ
  */
 export async function loginAndSetup(page: Page): Promise<void> {
-    await page.goto('/')
+    await page.goto(testConfig.routes.home)
     // リダイレクト完了を待機
     await page.waitForLoadState('networkidle')
 
     // ログインページにリダイレクトされた場合のみログイン
-    if (page.url().includes('/login')) {
-        await page.getByLabel('ユーザー名').fill(TEST_USER.username)
-        await page.getByLabel('パスワード', { exact: true }).fill(TEST_USER.password)
+    if (page.url().includes(testConfig.routes.login)) {
+        await page.getByLabel('ユーザー名').fill(testConfig.users.default.username)
+        await page.getByLabel('パスワード', { exact: true }).fill(testConfig.users.default.password)
         await page.getByRole('button', { name: 'ログイン' }).click()
     }
     // メインページ表示待機
@@ -38,9 +32,9 @@ export async function loginAndSetup(page: Page): Promise<void> {
  * UI経由でログインする（強制）
  */
 export async function loginViaUI(page: Page): Promise<void> {
-    await page.goto('/login')
-    await page.getByLabel('ユーザー名').fill(TEST_USER.username)
-    await page.getByLabel('パスワード', { exact: true }).fill(TEST_USER.password)
+    await page.goto(testConfig.routes.login)
+    await page.getByLabel('ユーザー名').fill(testConfig.users.default.username)
+    await page.getByLabel('パスワード', { exact: true }).fill(testConfig.users.default.password)
     await page.getByRole('button', { name: 'ログイン' }).click()
     await expect(page.locator('.document-column')).toBeVisible({ timeout: 15000 })
 }
@@ -134,7 +128,8 @@ export async function createPromptViaUI(page: Page, title: string, type: 'all' |
     await page.getByLabel('プロンプト名').fill(title)
 
     if (type === 'each') {
-        await page.getByLabel('プロンプトタイプ').click()
+        // ラベルテキストを含む入力フィールド内のドロップダウンアイコンをクリック（順序依存を排除）
+        await page.locator('.v-input').filter({ hasText: 'プロンプトタイプ' }).locator('.mdi-menu-down').click()
         await page.getByRole('option', { name: '個別フィールド用' }).click()
     }
 
@@ -153,21 +148,47 @@ export async function createPromptViaUI(page: Page, title: string, type: 'all' |
 
 /**
  * UI経由でプロンプトを選択する
+ * 
+ * TODO: Vuetifyのv-select操作が不安定なため、テストが失敗する場合がある。
+ * ユーザー提供のロケータでドロップダウンは開けるようになったが、選択後のボタン活性化確認で躓くことが多い。
+ * 詳細な改修はユーザー側で引き取るため、現状は暫定実装として維持する。
  */
 export async function selectPromptViaUI(page: Page, title: string): Promise<void> {
-    const editBtn = page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-pencil') })
+    const editBtn = page.locator('.prompt-column').getByRole('button').filter({ has: page.locator('.mdi-pencil') }).first()
 
-    // ドロップダウンを開く
-    const select = page.locator('.prompt-column .v-input').first()
-    await select.click()
+    // ドロップダウンを開く（ユーザー提供の確実なロケータを使用）
+    const dropdownArrow = page.locator('.prompt-column .mdi-menu-down').first()
+    await dropdownArrow.click()
 
     // オプションが表示されるのを待ってクリック
     const option = page.getByRole('option', { name: title }).first()
     await expect(option).toBeVisible()
-    await option.click()
 
-    // 編集ボタンが有効になるまで待機
-    // 選択処理が反映されるまで時間がかかる場合があるためタイムアウトを確保
+    // キーボード操作を優先（Vuetifyのv-selectと相性が良いため）
+    try {
+        await option.scrollIntoViewIfNeeded()
+    } catch { } // 無視
+
+    await option.focus()
+    await page.keyboard.press('Enter')
+
+    // 編集ボタンが有効になったか確認
+    try {
+        await expect(editBtn).toBeEnabled({ timeout: 2000 })
+    } catch {
+        // キー操作で反応しなかった場合、強制クリックを試行
+        try {
+            // 見えなくてもDOMにあればクリックを試みる
+            await option.click({ force: true })
+        } catch { } // 無視
+
+        // 再度待機
+        try {
+            await expect(editBtn).toBeEnabled({ timeout: 5000 })
+        } catch { } // 無視
+    }
+
+    // 最終的な確認（十分なタイムアウト）
     await expect(editBtn).toBeEnabled({ timeout: 10000 })
 }
 

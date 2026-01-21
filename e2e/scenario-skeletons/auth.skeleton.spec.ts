@@ -4,7 +4,7 @@
  * チェックリスト準拠: docs/test-scenarios-checklist.md
  */
 import { test, expect } from '@playwright/test'
-import { testMeta, captureStep, loginAndSetup, loginViaUI, logoutViaUI } from '../lib'
+import { testMeta, captureStep, loginAndSetup, loginViaUI, logoutViaUI, testConfig } from '../lib'
 
 // ファイルレベルのメタデータ
 testMeta({
@@ -23,7 +23,7 @@ test.describe('認証シナリオ', () => {
             { type: 'expected', description: '有効な認証情報でログインでき、メイン画面に遷移すること' },
         )
 
-        await page.goto('http://localhost:3000')
+        await page.goto(testConfig.baseURL)
 
         await captureStep(page, 'ログイン操作', async () => {
             // === CODEGEN: user1/password入力 → ログイン ===
@@ -80,7 +80,7 @@ test.describe('認証シナリオ', () => {
             { type: 'expected', description: 'エラーメッセージが表示されること' },
         )
 
-        await page.goto('http://localhost:3000')
+        await page.goto(testConfig.baseURL)
 
         await captureStep(page, 'ログイン失敗操作', async () => {
             // === CODEGEN: invalid/wrong入力 → ログイン ===
@@ -97,7 +97,7 @@ test.describe('認証シナリオ', () => {
             { type: 'expected', description: 'ユーザー名が空の場合ログインボタンが無効であること' },
         )
 
-        await page.goto('http://localhost:3000')
+        await page.goto(testConfig.baseURL)
 
         await captureStep(page, 'ユーザー名空入力', async () => {
             // === CODEGEN: パスワードのみ入力など ===
@@ -114,7 +114,7 @@ test.describe('認証シナリオ', () => {
             { type: 'expected', description: 'パスワードが空の場合ログインボタンが無効であること' },
         )
 
-        await page.goto('http://localhost:3000')
+        await page.goto(testConfig.baseURL)
 
         await captureStep(page, 'パスワード空入力', async () => {
             // === CODEGEN: ユーザー名のみ入力 ===

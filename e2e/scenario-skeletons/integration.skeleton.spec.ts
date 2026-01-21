@@ -4,7 +4,7 @@
  * チェックリスト準拠: docs/test-scenarios-checklist.md
  */
 import { test, expect } from '@playwright/test'
-import { testMeta, createDocumentViaUI, createPromptViaUI, captureStep, loginAndSetup } from '../lib'
+import { testMeta, createDocumentViaUI, createPromptViaUI, captureStep, loginAndSetup, testConfig } from '../lib'
 
 // ファイルレベルのメタデータ
 testMeta({
@@ -23,7 +23,7 @@ test.describe('統合シナリオ', () => {
             { type: 'expected', description: 'ログインから生成・ログアウトまでの一連の流れが成功すること' },
         )
 
-        await page.goto('http://localhost:3000')
+        await page.goto(testConfig.baseURL)
 
         // Step 1: ログイン
         await captureStep(page, 'Step1: ログイン', async () => {
