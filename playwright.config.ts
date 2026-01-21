@@ -32,6 +32,11 @@ export default defineConfig({
     reporter: [
         ['html', { outputFolder: 'playwright-report' }],
         ['list'],
+        // Excel Reporter（カスタムカラム構成でエビデンス出力）
+        ['./e2e/lib/playwright-excel-reporter', {
+            outputPath: 'test-results/test-report.xlsx',
+            embedImages: true,
+        }],
     ],
 
     // 共通設定
